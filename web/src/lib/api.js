@@ -61,6 +61,7 @@ export async function api(path, opts) {
 export const post = (path, body) => api(path, { method: 'POST', body: body ?? {} });
 export const put = (path, body) => api(path, { method: 'PUT', body });
 export const patch = (path, body) => api(path, { method: 'PATCH', body });
+export const del = (path) => api(path, { method: 'DELETE' });
 
 /** { 'heightCm': 'Height must be…' } from a validation error */
 export function fieldErrors(err) {

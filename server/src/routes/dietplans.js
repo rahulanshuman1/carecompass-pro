@@ -86,6 +86,15 @@ r.put('/diet-plans/:id', validObjectId, requireRole('DIETITIAN'), validate(planB
   res.json({ plan });
 }));
 
+r.delete('/diet-plans/:id', validObjectId, requireRole('DIETITIAN'), asyncHandler(async (req, res) => {
+  const plan = await loadPlan(req);
+  need(String(plan.dietitian) === req.user.id, 403, 'Only the plan author can discard it.', 'FORBIDDEN');
+  need(plan.status === 'DRAFT', 409, 'Only drafts can be discarded.', 'INVALID_STATE');
+  await plan.deleteOne();
+  await audit(req, 'PLAN_DISCARDED', 'DietPlan', plan._id, `v${plan.version}`);
+  res.json({ ok: true });
+}));
+
 r.post('/diet-plans/:id/submit', validObjectId, requireRole('DIETITIAN'), asyncHandler(async (req, res) => {
   const plan = await loadPlan(req);
   assertPlanTransition(plan, 'IN_REVIEW', { role: req.user.role, userId: req.user.id });

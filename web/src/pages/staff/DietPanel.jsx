@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Salad } from 'lucide-react';
-import { post, put } from '../../lib/api';
+import { del, post, put } from '../../lib/api';
 import { useToast } from '../../lib/toast';
 import { itemsKcal, planKcal } from '../../lib/format';
 import { Alert, Badge, Button, Card, CardTitle, Field, Input, StatusBadge, Textarea } from '../../components/ui';
@@ -38,7 +38,7 @@ function PlanSummary({ p }) {
   );
 }
 
-function Builder({ plan, onDone }) {
+function Builder({ plan, onDone, hasActive }) {
   const toast = useToast();
   const [f, setF] = useState(() => toForm(plan));
   const [errs, setErrs] = useState([]);
@@ -46,6 +46,15 @@ function Builder({ plan, onDone }) {
   const planId = plan.id || plan._id;
   const save = useMutation({ mutationFn: () => put(`/diet-plans/${planId}`, toBody(f)) });
   const submit = useMutation({ mutationFn: () => post(`/diet-plans/${planId}/submit`) });
+  const discard = useMutation({
+    mutationFn: () => del(`/diet-plans/${planId}`),
+    onSuccess: () => { toast.success(hasActive ? 'Revision cancelled. The live plan is unchanged.' : 'Draft discarded'); onDone(); },
+    onError: (e) => setErrs([e.message]),
+  });
+  const cancel = () => {
+    const msg = hasActive ? 'Cancel this revision? Your edits will be lost. The live plan stays as it is.' : 'Discard this draft? Your edits will be lost.';
+    if (window.confirm(msg)) discard.mutate();
+  };
 
   const setT = (k) => (e) => setF((s) => ({ ...s, targets: { ...s.targets, [k]: e.target.value } }));
   const upMeal = (i, patch) => setF((s) => ({ ...s, meals: s.meals.map((m, k) => (k === i ? { ...m, ...patch } : m)) }));
@@ -102,6 +111,7 @@ function Builder({ plan, onDone }) {
       <Field label="Supplements"><Input value={f.supplements} maxLength={300} onChange={(e) => setF({ ...f, supplements: e.target.value })} /></Field>
       <Field label="Notes & follow-up"><Textarea value={f.notes} maxLength={1000} onChange={(e) => setF({ ...f, notes: e.target.value })} /></Field>
       <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="ghost" loading={discard.isPending} onClick={cancel}>{hasActive ? 'Cancel revision' : 'Discard draft'}</Button>
         <Button variant="secondary" loading={save.isPending && !submit.isPending} onClick={() => go(false)}>Save draft</Button>
         <Button loading={submit.isPending} onClick={() => go(true)}>Submit for review</Button>
       </div>
@@ -133,7 +143,7 @@ export default function DietPanel({ data, patientId, role, userId }) {
       {work ? (
         <>
           <div className="mb-3 flex items-center justify-between"><h3>Working plan v{work.version}</h3><StatusBadge status={work.status} /></div>
-          {work.status === 'DRAFT' && mine ? <Builder plan={work} onDone={refresh} /> : (
+          {work.status === 'DRAFT' && mine ? <Builder plan={work} onDone={refresh} hasActive={!!active} /> : (
             <>
               <PlanSummary p={work} />
               {work.status === 'IN_REVIEW' && role === 'LEAD_DOCTOR' && (
