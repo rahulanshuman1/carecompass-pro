@@ -6,7 +6,7 @@ services:
     rootDir: server
     plan: starter            # Starter or higher keeps the service awake (free tier sleeps and delays webhooks)
     region: singapore        # closest Render region to India
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /healthz
     autoDeploy: true

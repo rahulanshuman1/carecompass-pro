@@ -124,7 +124,7 @@ export const Membership = model('Membership', membershipSchema);
 /* ---------------- Assignments ---------------- */
 const assignmentSchema = new Schema(
   {
-    patient: ref('User', { required: true, index: true }),
+    patient: ref('User', { required: true }),
     dietitian: ref('User', { required: true, index: true }),
     assignedBy: ref('User', { required: true }),
     isOpen: { type: Boolean, default: true },
@@ -134,7 +134,7 @@ const assignmentSchema = new Schema(
   { timestamps: true },
 );
 // At most one open assignment per patient (enforced by the database, not just code)
-assignmentSchema.index({ patient: 1 }, { unique: true, partialFilterExpression: { isOpen: true } });
+assignmentSchema.index({ patient: 1 }, { name: 'one_open_assignment_per_patient', unique: true, partialFilterExpression: { isOpen: true } });
 export const Assignment = model('Assignment', assignmentSchema);
 
 /* ---------------- Diet plans ---------------- */
@@ -145,7 +145,7 @@ const mealSchema = new Schema({
 });
 const dietPlanSchema = new Schema(
   {
-    patient: ref('User', { required: true, index: true }),
+    patient: ref('User', { required: true }),
     dietitian: ref('User', { required: true, index: true }),
     version: { type: Number, required: true },
     status: { type: String, enum: ['DRAFT', 'IN_REVIEW', 'ACTIVE', 'ARCHIVED'], default: 'DRAFT', index: true },
@@ -169,7 +169,7 @@ const dietPlanSchema = new Schema(
   { timestamps: true },
 );
 dietPlanSchema.index({ patient: 1, version: 1 }, { unique: true });
-dietPlanSchema.index({ patient: 1 }, { unique: true, partialFilterExpression: { status: 'ACTIVE' } }); // one live plan per patient
+dietPlanSchema.index({ patient: 1 }, { name: 'one_active_plan_per_patient', unique: true, partialFilterExpression: { status: 'ACTIVE' } }); // one live plan per patient
 export const DietPlan = model('DietPlan', dietPlanSchema);
 
 /* ---------------- Adherence, notes, audit, webhooks ---------------- */

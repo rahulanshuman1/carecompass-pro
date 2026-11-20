@@ -22,6 +22,7 @@ export function createApp() {
   app.set('trust proxy', 1); // Render terminates TLS in front of the app
   app.disable('x-powered-by');
 
+  app.get('/', (_req, res) => res.json({ service: 'carecompass-api', ok: true }));
   app.get('/healthz', (_req, res) => res.json({ ok: true, db: mongoose.connection.readyState === 1 }));
 
   app.use(helmet());

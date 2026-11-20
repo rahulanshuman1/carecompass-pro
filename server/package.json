@@ -9,7 +9,8 @@
     "dev": "node --watch src/index.js",
     "test": "node --test",
     "seed:admin": "node src/scripts/seedAdmin.js",
-    "seed:demo": "node src/scripts/seedDemo.js"
+    "seed:demo": "node src/scripts/seedDemo.js",
+    "sync:indexes": "node src/scripts/syncIndexes.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
