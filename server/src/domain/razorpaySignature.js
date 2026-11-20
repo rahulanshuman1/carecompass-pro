@@ -19,3 +19,10 @@ export function verifyWebhookSignature(rawBody, signature, webhookSecret) {
   const expected = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
   return safeEqual(expected, signature);
 }
+
+/** Checkout success callback for ORDERS: HMAC_SHA256(order_id + "|" + payment_id, key_secret) */
+export function verifyOrderSignature({ orderId, paymentId, signature }, keySecret) {
+  if (!orderId || !paymentId || !signature || !keySecret) return false;
+  const expected = crypto.createHmac('sha256', keySecret).update(`${orderId}|${paymentId}`).digest('hex');
+  return safeEqual(expected, signature);
+}

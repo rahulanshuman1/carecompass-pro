@@ -29,7 +29,9 @@ export async function startSubscriptionCheckout(s) {
   return new Promise((resolve, reject) => {
     const rz = new window.Razorpay({
       key: s.keyId,
-      subscription_id: s.subscriptionId,
+      ...(s.mode === 'order'
+        ? { order_id: s.subscriptionId, amount: Math.round(s.amountInr * 100), currency: 'INR' }
+        : { subscription_id: s.subscriptionId }),
       name: 'CareCompass',
       description: `${s.planName} membership`,
       prefill: s.prefill,

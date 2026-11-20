@@ -11,7 +11,10 @@ export function rzp() {
 
 const wrap = (e) => {
   // Razorpay SDK errors look like { statusCode, error: { description } }
-  const msg = e?.error?.description || e?.message || 'Payment provider error';
+  console.error('[razorpay]', e?.statusCode, JSON.stringify(e?.error || e?.message || e));
+  const d = e?.error;
+  const msg = d?.description || (typeof d === 'string' ? d : '') || e?.message
+    || `HTTP ${e?.statusCode || 'unknown'} ${d?.code || ''} ${d?.reason || ''}`.trim() || 'Payment provider error';
   return new AppError(502, `Razorpay: ${msg}`, 'RAZORPAY_ERROR');
 };
 
@@ -54,6 +57,20 @@ export async function cancelSubscription(subscriptionId) {
   } catch (e) {
     // already cancelled/completed is fine
     if (/cancel|complete/i.test(e?.error?.description || '')) return null;
+    throw wrap(e);
+  }
+}
+
+/** One-time order (works without the Subscriptions product). Used when PAYMENT_MODE=order. */
+export async function createOrder({ membership, plan }) {
+  try {
+    return await rzp().orders.create({
+      amount: Math.round(plan.priceInr * 100),
+      currency: 'INR',
+      receipt: `m_${String(membership._id).slice(-12)}`,
+      notes: { membershipId: String(membership._id) },
+    });
+  } catch (e) {
     throw wrap(e);
   }
 }

@@ -140,6 +140,7 @@ r.post(
 r.post('/memberships/:patientId/payment-link', validObjectId, admin, asyncHandler(async (req, res) => {
   const mem = await Membership.findOne({ patient: req.params.patientId });
   need(mem, 404, 'Membership not found', 'NOT_FOUND');
+  need(process.env.PAYMENT_MODE !== 'order', 409, 'Payment links need Razorpay Subscriptions. Ask the patient to pay from their Membership page, or record an offline payment.', 'INVALID_STATE');
   const m = await ensureSubscription(mem, req);
   res.json({ shortUrl: m.razorpay.shortUrl, subscriptionId: m.razorpay.subscriptionId });
 }));
