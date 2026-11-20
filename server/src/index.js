@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
 import { config } from './config.js';
 import { createApp } from './app.js';
+import { bootstrap } from './services/bootstrap.js';
 
 mongoose.set('strictQuery', true);
 
 async function main() {
   await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 10000 });
   console.log('MongoDB connected');
+  await bootstrap();
   const app = createApp();
   const server = app.listen(config.port, () => console.log(`API listening on :${config.port} (${config.env})`));
 
