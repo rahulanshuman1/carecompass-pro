@@ -1,0 +1,7 @@
+{
+  "appId": "com.carecompass.app",
+  "appName": "CareCompass",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false },
+  "server": { "androidScheme": "https" }
+}
