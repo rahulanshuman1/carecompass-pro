@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { config } from '../config.js';
 import { User, MembershipPlan, Assignment, DietPlan } from '../models/index.js';
 import { seedPlans } from '../scripts/_common.js';
+import { seedDemoData, purgeDemoData, DEMO_PASSWORD } from './demoData.js';
 
 /**
  * Runs at every startup (no Shell access needed, e.g. on Render's free plan). Idempotent:
@@ -30,5 +31,15 @@ export async function bootstrap() {
   if ((await MembershipPlan.countDocuments()) === 0) {
     const plans = await seedPlans();
     console.log('Bootstrap: created default plans:', plans.map((p) => p.name).join(', '));
+  }
+
+  // Demo data on hosts without a shell: set DEMO_DATA=seed (load) or DEMO_DATA=purge (remove), then redeploy.
+  if (config.demoData === 'seed') {
+    try {
+      await seedDemoData();
+      console.log(`Bootstrap: demo data ready. All demo accounts use password ${DEMO_PASSWORD} (emails end with @demo.com)`);
+    } catch (e) { console.error('Bootstrap: demo seeding failed:', e.message); }
+  } else if (config.demoData === 'purge') {
+    console.log(`Bootstrap: removed ${await purgeDemoData()} demo users and their records`);
   }
 }

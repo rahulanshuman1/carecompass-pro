@@ -15,6 +15,7 @@ const schema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  DEMO_DATA: z.string().optional(),
   ADMIN_NAME: z.string().optional(),
   ADMIN_EMAIL: z.string().optional(),
   ADMIN_PASSWORD: z.string().optional(),
@@ -47,5 +48,6 @@ export const config = {
     webhookSecret: e.RAZORPAY_WEBHOOK_SECRET,
     enabled: Boolean(e.RAZORPAY_KEY_ID && e.RAZORPAY_KEY_SECRET),
   },
+  demoData: (e.DEMO_DATA || '').trim().toLowerCase(),
   admin: { name: e.ADMIN_NAME, email: e.ADMIN_EMAIL, password: e.ADMIN_PASSWORD },
 };
