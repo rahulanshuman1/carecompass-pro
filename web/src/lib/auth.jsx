@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { api, post, refreshSession, setAccessToken, setOnAuthLost } from './api';
+import { api, patch, post, put, refreshSession, setAccessToken, setOnAuthLost } from './api';
 
 const Ctx = createContext(null);
 export const useAuth = () => useContext(Ctx);
@@ -34,6 +34,16 @@ export function AuthProvider({ children }) {
     setAccessToken(null); qc.clear(); setUser(null);
   }, [qc]);
 
+  const updateProfile = useCallback(async (body) => {
+    const d = await patch('/auth/me', body);
+    setUser(d.user); return d.user;
+  }, []);
+
+  const setPhoto = useCallback(async (photo) => {
+    const d = photo ? await put('/auth/me/photo', { photo }) : await api('/auth/me/photo', { method: 'DELETE' });
+    setUser(d.user); return d.user;
+  }, []);
+
   // Idle timeout
   useEffect(() => {
     if (!user) return undefined;
@@ -45,6 +55,6 @@ export function AuthProvider({ children }) {
     return () => { clearTimeout(t); evs.forEach((e) => window.removeEventListener(e, bump)); };
   }, [user, logout]);
 
-  const value = useMemo(() => ({ user, ready, login, register, logout, changePassword }), [user, ready, login, register, logout, changePassword]);
+  const value = useMemo(() => ({ user, ready, login, register, logout, changePassword, updateProfile, setPhoto }), [user, ready, login, register, logout, changePassword, updateProfile, setPhoto]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -28,7 +28,7 @@ export default function Layout() {
           ))}
         </nav>
         <div className="rounded-2xl bg-slate-50 p-3">
-          <div className="flex items-center gap-3"><Avatar name={user.name} /><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{user.name}</p><p className="text-xs text-slate-500">{ROLE_LABEL[user.role]}</p></div></div>
+          <NavLink to="/profile" className="flex items-center gap-3 rounded-xl p-1 hover:bg-white" title="Edit profile"><Avatar name={user.name} photo={user.photo} /><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{user.name}</p><p className="truncate text-xs text-slate-500">{user.title || ROLE_LABEL[user.role]}</p></div></NavLink>
           <button onClick={logout} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"><LogOut className="h-4 w-4" />Sign out</button>
         </div>
       </aside>
@@ -37,7 +37,7 @@ export default function Layout() {
         {/* Top bar (mobile) */}
         <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:hidden">
           <Brand compact />
-          <button onClick={logout} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100" aria-label="Sign out"><LogOut className="h-4 w-4" />Sign out</button>
+          <div className="flex items-center gap-1"><NavLink to="/profile" aria-label="My profile"><Avatar name={user.name} photo={user.photo} /></NavLink><button onClick={logout} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100" aria-label="Sign out"><LogOut className="h-4 w-4" />Sign out</button></div>
         </header>
         <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-10"><div className="animate-rise"><Outlet /></div></main>
       </div>

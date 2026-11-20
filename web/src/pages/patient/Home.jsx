@@ -60,7 +60,7 @@ export default function PatientHome() {
           </Card>
           <Card>
             <CardTitle icon={UserRound} title="Your dietitian" />
-            {dietitian ? <div className="flex items-center gap-3"><Avatar name={dietitian.name} /><div><p className="text-sm font-semibold text-slate-900">{dietitian.name}</p><p className="text-xs text-slate-500">{dietitian.specialty}</p></div></div> : <p className="text-sm text-slate-500">Assigned once your membership is active.</p>}
+            {dietitian ? <div className="flex items-center gap-3"><Avatar name={dietitian.name} photo={dietitian.photo} /><div><p className="text-sm font-semibold text-slate-900">{dietitian.name}</p><p className="text-xs text-slate-500">{dietitian.specialty}</p></div></div> : <p className="text-sm text-slate-500">Assigned once your membership is active.</p>}
           </Card>
           {activePlan && (
             <Card>

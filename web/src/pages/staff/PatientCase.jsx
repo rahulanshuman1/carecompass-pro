@@ -88,7 +88,7 @@ export default function PatientCase() {
     <div className="mx-auto max-w-4xl space-y-5">
       <Button variant="ghost" size="sm" onClick={() => nav(-1)}><ArrowLeft className="h-4 w-4" />Back</Button>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4"><Avatar name={patient.name} size="lg" /><div><h1>{patient.name}</h1><p className="text-sm text-slate-500">{profile?.dob ? `${ageFrom(profile.dob)} yrs · ${profile.sex} · ` : ''}{assignment ? `Dietitian: ${assignment.dietitian?.name}` : 'No dietitian assigned'}</p></div></div>
+        <div className="flex items-center gap-4"><Avatar name={patient.name} photo={patient.photo} size="lg" /><div><h1>{patient.name}</h1><p className="text-sm text-slate-500">{profile?.dob ? `${ageFrom(profile.dob)} yrs · ${profile.sex} · ` : ''}{assignment ? `Dietitian: ${assignment.dietitian?.name}` : 'No dietitian assigned'}</p></div></div>
         <StatusBadge status={m.status} />
       </div>
       <Alert tone="info" className="text-xs">You are viewing protected health information. This access is recorded in the audit log.</Alert>

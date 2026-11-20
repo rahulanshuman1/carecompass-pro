@@ -57,7 +57,7 @@ r.get('/audit', asyncHandler(async (req, res) => {
 }));
 
 r.get('/staff', asyncHandler(async (_req, res) => {
-  res.json({ items: await User.find({ role: { $ne: 'PATIENT' } }).sort({ role: 1, name: 1 }) });
+  res.json({ items: await User.find({ role: { $ne: 'PATIENT' } }).select('+photo').sort({ role: 1, name: 1 }) });
 }));
 
 r.post(

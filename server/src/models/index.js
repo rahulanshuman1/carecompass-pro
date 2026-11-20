@@ -45,6 +45,7 @@ const userSchema = new Schema(
     maxLoad: { type: Number, min: 1, max: 100 },
     // lead doctor
     title: String,
+    photo: { type: String, select: false }, // small JPEG data URL, resized in the browser
   },
   { timestamps: true },
 );

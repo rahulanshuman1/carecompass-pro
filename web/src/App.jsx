@@ -17,6 +17,7 @@ import Dashboard from './pages/doctor/Dashboard';
 import Team from './pages/doctor/Team';
 import Reviews from './pages/doctor/Reviews';
 import Audit from './pages/doctor/Audit';
+import Profile from './pages/Profile';
 
 function Guard({ roles, children }) {
   const { user } = useAuth();
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/team" element={<Guard roles={L}><Team /></Guard>} />
         <Route path="/reviews" element={<Guard roles={L}><Reviews /></Guard>} />
         <Route path="/audit" element={<Guard roles={L}><Audit /></Guard>} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to={homeFor(user.role)} replace />} />
       </Route>
     </Routes>

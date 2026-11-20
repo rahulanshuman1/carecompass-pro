@@ -18,7 +18,7 @@ r.get('/', asyncHandler(async (req, res) => {
   const [profile, membership, assignment, active] = await Promise.all([
     PatientProfile.findOne({ user: pid }),
     populateMembership(Membership.findOne({ patient: pid })),
-    Assignment.findOne({ patient: pid, isOpen: true }).populate('dietitian', 'name specialty'),
+    Assignment.findOne({ patient: pid, isOpen: true }).populate('dietitian', 'name specialty +photo'),
     DietPlan.findOne({ patient: pid, status: 'ACTIVE' }).select('title version startDate dietitian'),
   ]);
   const adh = await adherenceMap([pid]);

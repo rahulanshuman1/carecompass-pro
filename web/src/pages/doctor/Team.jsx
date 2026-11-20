@@ -40,7 +40,7 @@ export default function Team() {
           return (
             <Card key={u.id} className={u.isActive ? '' : 'opacity-60'}>
               <div className="flex items-start gap-3">
-                <Avatar name={u.name} />
+                <Avatar name={u.name} photo={u.photo} />
                 <div className="min-w-0 flex-1"><h3 className="truncate">{u.name}</h3><p className="truncate text-xs text-slate-500">{u.email}</p></div>
                 <Badge tone={u.role === 'LEAD_DOCTOR' ? 'brand' : 'slate'}>{ROLE_LABEL[u.role]}</Badge>
               </div>

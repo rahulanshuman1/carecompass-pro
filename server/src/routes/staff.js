@@ -63,7 +63,7 @@ r.get('/my/patients', requireRole('DIETITIAN'), asyncHandler(async (req, res) =>
 /* ---------- Patient detail (role-filtered) ---------- */
 r.get('/patients/:patientId', validObjectId, requireRole('CARE_TEAM', 'LEAD_DOCTOR', 'DIETITIAN'), requirePatientAccess(), asyncHandler(async (req, res) => {
   const pid = req.params.patientId;
-  const user = await User.findOne({ _id: pid, role: 'PATIENT' });
+  const user = await User.findOne({ _id: pid, role: 'PATIENT' }).select('+photo');
   need(user, 404, 'Patient not found', 'NOT_FOUND');
   const role = req.user.role;
   const [profile, membership, assignment, notes] = await Promise.all([
@@ -73,7 +73,7 @@ r.get('/patients/:patientId', validObjectId, requireRole('CARE_TEAM', 'LEAD_DOCT
     CareNote.find({ patient: pid }).sort({ createdAt: -1 }).limit(50).populate('author', 'name'),
   ]);
   const out = {
-    patient: { id: pid, name: user.name, email: user.email },
+    patient: { id: pid, name: user.name, email: user.email, photo: user.photo || null },
     profile: redactProfileFor(role, profile?.toJSON()),
     membership,
     assignment,

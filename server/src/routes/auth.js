@@ -31,7 +31,7 @@ const cookieOpts = () => ({
 
 const publicUser = (u) => ({
   id: String(u._id), name: u.name, email: u.email, role: u.role,
-  mustChangePassword: !!u.mustChangePassword, specialty: u.specialty, title: u.title,
+  mustChangePassword: !!u.mustChangePassword, specialty: u.specialty, title: u.title, photo: u.photo || null,
 });
 const signAccess = (u) => jwt.sign({ sub: String(u._id), role: u.role }, config.jwt.access, { expiresIn: config.jwt.accessTtl });
 
@@ -64,7 +64,7 @@ r.post(
   '/login',
   validate(z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1).max(128) })),
   asyncHandler(async (req, res) => {
-    const u = await User.findOne({ email: req.body.email }).select('+passwordHash +failedLogins +lockUntil +refreshTokens');
+    const u = await User.findOne({ email: req.body.email }).select('+passwordHash +failedLogins +lockUntil +refreshTokens +photo');
     const generic = new AppError(401, 'Incorrect email or password.', 'BAD_CREDENTIALS');
     if (!u || !u.isActive) {
       await bcrypt.compare(req.body.password, DUMMY_HASH);
@@ -92,7 +92,7 @@ r.post(
     const raw = req.cookies?.[COOKIE];
     const [uid, token] = String(raw || '').split(/\.(.+)/);
     if (!uid || !token || !/^[a-f\d]{24}$/i.test(uid)) throw new AppError(401, 'Signed out', 'UNAUTHENTICATED');
-    const u = await User.findById(uid).select('+refreshTokens');
+    const u = await User.findById(uid).select('+refreshTokens +photo');
     if (!u || !u.isActive) throw new AppError(401, 'Signed out', 'UNAUTHENTICATED');
     const h = hash(token);
     const found = (u.refreshTokens || []).find((t) => t.hash === h);
@@ -119,8 +119,36 @@ r.post(
 );
 
 r.get('/me', authenticateAllowPending, asyncHandler(async (req, res) => {
-  const u = await User.findById(req.user.id);
+  const u = await User.findById(req.user.id).select('+photo');
   res.json({ user: publicUser(u) });
+}));
+
+r.patch(
+  '/me',
+  authenticateAllowPending,
+  validate(z.object({ name: z.string().trim().min(2, 'Enter your name.').max(100), title: z.string().trim().max(120).optional() })),
+  asyncHandler(async (req, res) => {
+    const u = await User.findById(req.user.id).select('+photo');
+    u.name = req.body.name;
+    if (u.role !== 'PATIENT' && req.body.title !== undefined) u.title = req.body.title; // professional title: staff only
+    await u.save();
+    await audit(req, 'PROFILE_UPDATED', 'User', u._id);
+    res.json({ user: publicUser(u) });
+  }),
+);
+
+const photoSchema = z.object({
+  photo: z.string().max(150_000, 'That image is too large.').regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Upload a JPEG, PNG or WebP image.'),
+});
+r.put('/me/photo', authenticateAllowPending, validate(photoSchema), asyncHandler(async (req, res) => {
+  await User.updateOne({ _id: req.user.id }, { $set: { photo: req.body.photo } });
+  await audit(req, 'PHOTO_UPDATED', 'User', req.user.id);
+  res.json({ user: publicUser(await User.findById(req.user.id).select('+photo')) });
+}));
+r.delete('/me/photo', authenticateAllowPending, asyncHandler(async (req, res) => {
+  await User.updateOne({ _id: req.user.id }, { $unset: { photo: 1 } });
+  await audit(req, 'PHOTO_REMOVED', 'User', req.user.id);
+  res.json({ user: publicUser(await User.findById(req.user.id).select('+photo')) });
 }));
 
 r.post(
