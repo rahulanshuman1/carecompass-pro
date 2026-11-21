@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, AlertCircle, Info, X, CheckCircle2 } from 'lucide-react';
 import { STATUS_TONE, label, initials } from '../lib/format';
 
@@ -122,24 +123,30 @@ export function PageHeader({ title, sub, action }) {
 
 export function Modal({ open, onClose, title, children, footer }) {
   const ref = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => e.key === 'Escape' && closeRef.current();
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     ref.current?.focus();
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-lg animate-rise overflow-y-auto rounded-t-[2rem] bg-white p-6 shadow-2xl sm:rounded-[2rem]">
-        <div className="mb-4 flex items-center justify-between"><h2>{title}</h2><button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div>
-        {children}
-        {footer && <div className="mt-5 flex flex-wrap justify-end gap-2">{footer}</div>}
+  // Rendered in a portal on <body>: inside the page, an animated (transformed) ancestor
+  // becomes the containing block of `position: fixed`, which is what clipped the popup.
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink-900/50 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="flex max-h-[calc(100dvh-1rem)] w-full max-w-lg animate-rise flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl outline-none sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2rem]">
+        <div className="flex shrink-0 items-center justify-between px-6 pb-3 pt-6"><h2>{title}</h2><button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-2">{children}</div>
+        {footer && <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-ink-100 bg-white px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{footer}</div>}
+        {!footer && <div className="h-4 shrink-0" />}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

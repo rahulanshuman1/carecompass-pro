@@ -9,7 +9,7 @@ import { Alert, Badge, Button, Card, CardTitle, EmptyState, Input, Modal, PageHe
 
 const mealId = (m) => m._id || m.id;
 
-/** Bottom sheet shown when the patient marks a meal done: the photo is optional. */
+/** Bottom sheet shown when the patient marks a meal done: a photo of the meal is required. */
 function MealDoneSheet({ meal, existing, onClose, onSave, saving }) {
   const toast = useToast();
   const input = useRef(null);
@@ -31,9 +31,9 @@ function MealDoneSheet({ meal, existing, onClose, onSave, saving }) {
       title={existing ? 'Update your meal photo' : 'Mark meal as done'}
       footer={
         <>
-          {!existing && <Button variant="ghost" onClick={() => onSave(undefined)} disabled={saving || busy}>Skip photo</Button>}
-          <Button onClick={() => onSave(photo || undefined)} loading={saving} disabled={busy || (existing && !photo)}>
-            <Check className="h-4 w-4" />{photo ? (existing ? 'Save photo' : 'Save photo and mark done') : 'Mark as done'}
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={() => onSave(photo)} loading={saving} disabled={busy || !photo}>
+            <Check className="h-4 w-4" />{existing ? 'Save photo' : 'Save photo and mark done'}
           </Button>
         </>
       }
@@ -54,7 +54,7 @@ function MealDoneSheet({ meal, existing, onClose, onSave, saving }) {
         <button type="button" onClick={() => input.current?.click()} disabled={busy} className="grid w-full place-items-center gap-2 rounded-3xl border-2 border-dashed border-brand-200 bg-brand-50/60 px-4 py-9 text-center transition hover:bg-brand-50">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-white text-brand-500 shadow-sm"><Camera className="h-7 w-7" /></span>
           <span className="font-bold text-ink-900">{busy ? 'Preparing photo…' : 'Add a photo of your meal'}</span>
-          <span className="text-xs text-slate-500">Optional. Take a picture or choose one from your gallery. Your dietitian can see it in your food diary.</span>
+          <span className="text-xs text-slate-500">Required to mark this meal done. Take a picture or choose one from your gallery. Your dietitian can see it in your food diary.</span>
         </button>
       )}
     </Modal>
@@ -89,9 +89,10 @@ export default function DietPlan() {
   const planned = meals.reduce((s, m) => s + itemsKcal(m), 0);
 
   function save(photo) {
+    if (!photo) { toast.error('Please add a photo of your meal first.'); return; }
     const m = sheet.meal;
-    log.mutate({ markMealDone: { mealId: mealId(m), ...(photo ? { photo } : {}) } }, {
-      onSuccess: () => { setSheet(null); toast.success(photo ? 'Meal saved to your food diary' : 'Meal marked as done'); },
+    log.mutate({ markMealDone: { mealId: mealId(m), photo } }, {
+      onSuccess: () => { setSheet(null); toast.success('Meal saved to your food diary'); },
     });
   }
 
@@ -139,7 +140,7 @@ export default function DietPlan() {
                       <Button size="sm" variant="secondary" onClick={() => setSheet({ meal: m, existing: photo || '' })}><Camera className="h-4 w-4" />{photo ? 'Change photo' : 'Add photo'}</Button>
                     </>
                   ) : (
-                    <Button size="sm" disabled={log.isPending} onClick={() => setSheet({ meal: m, existing: '' })}><Check className="h-4 w-4" />Mark done</Button>
+                    <Button size="sm" disabled={log.isPending} onClick={() => setSheet({ meal: m, existing: '' })}><Camera className="h-4 w-4" />Add photo & mark done</Button>
                   )}
                 </div>
               </div>

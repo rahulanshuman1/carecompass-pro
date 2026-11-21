@@ -119,7 +119,7 @@ r.put(
     toggleMealId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
     markMealDone: z.object({
       mealId: z.string().regex(/^[a-f\d]{24}$/i),
-      photo: z.string().max(130_000, 'That photo is too large.').regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Upload a JPEG, PNG or WebP photo.').optional(),
+      photo: z.string().max(130_000, 'That photo is too large.').regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Upload a JPEG, PNG or WebP photo.'),
     }).optional(),
     removePhotoMealId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
     addWaterMl: z.number().int().min(1).max(2000).optional(),
@@ -135,16 +135,18 @@ r.put(
     if (toggleMealId) {
       need(inPlan(toggleMealId), 400, 'That meal is not in your plan.', 'VALIDATION');
       const wasDone = log.mealsDone.includes(toggleMealId);
-      log.mealsDone = wasDone ? log.mealsDone.filter((x) => x !== toggleMealId) : [...log.mealsDone, toggleMealId];
-      if (wasDone) log.photos = log.photos.filter((p) => p.mealId !== toggleMealId); // undoing a meal removes its photo
+      need(wasDone, 400, 'Add a photo of your meal to mark it as done.', 'PHOTO_REQUIRED'); // toggle can only undo
+      log.mealsDone = log.mealsDone.filter((x) => x !== toggleMealId);
+      log.photos = log.photos.filter((p) => p.mealId !== toggleMealId); // undoing a meal removes its photo
     }
     if (markMealDone) {
       need(inPlan(markMealDone.mealId), 400, 'That meal is not in your plan.', 'VALIDATION');
       if (!log.mealsDone.includes(markMealDone.mealId)) log.mealsDone.push(markMealDone.mealId);
-      if (markMealDone.photo) {
-        log.photos = log.photos.filter((p) => p.mealId !== markMealDone.mealId);
-        log.photos.push({ mealId: markMealDone.mealId, photo: markMealDone.photo, at: new Date() });
-      }
+      log.photos = log.photos.filter((p) => p.mealId !== markMealDone.mealId);
+      log.photos.push({ mealId: markMealDone.mealId, photo: markMealDone.photo, at: new Date() });
+    }
+    if (removePhotoMealId) {
+      need(!log.mealsDone.includes(removePhotoMealId), 400, 'Replace the photo or undo the meal instead.', 'PHOTO_REQUIRED');
     }
     if (removePhotoMealId) log.photos = log.photos.filter((p) => p.mealId !== removePhotoMealId);
     if (addWaterMl) log.waterMl = Math.min(10000, log.waterMl + addWaterMl);
