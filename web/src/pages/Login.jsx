@@ -1,5 +1,6 @@
+import Logo from '../components/Logo';
 import { useState } from 'react';
-import { HeartPulse, ShieldCheck, Salad, Stethoscope, Camera } from 'lucide-react';
+import { HeartPulse, ShieldCheck, Salad, Camera } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { fieldErrors } from '../lib/api';
 import { Alert, Button, Field, Input } from '../components/ui';
@@ -26,7 +27,7 @@ export default function Login() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       <div className="relative hidden overflow-hidden bg-gradient-to-br from-ink-900 via-ink-800 to-brand-900 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="relative z-10 flex items-center gap-2.5 text-xl font-extrabold"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700"><Stethoscope className="h-5 w-5" /></span>CareCompass</div>
+        <div className="relative z-10"><Logo size={52} light /></div>
         <div className="relative z-10">
           <p className="mb-3 inline-flex rounded-full bg-white/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-brand-200">Diet and care programs</p>
           <h1 className="text-5xl font-extrabold leading-[1.1] text-white">Eat the food you love.<br /><span className="text-brand-300">Reach the goals you set.</span></h1>
