@@ -7,6 +7,7 @@ import { authenticate, requireRole, validate, validObjectId, requirePatientAcces
 import { assertPlanTransition } from '../domain/dietplan.js';
 import { canViewPatient } from '../domain/rbac.js';
 import { audit } from '../services/audit.js';
+import { autoGeneratePlan } from '../services/autoplan.js';
 import { todayStr } from '../utils/dates.js';
 import { config } from '../config.js';
 
@@ -60,6 +61,14 @@ r.post('/patients/:patientId/diet-plans', validObjectId, requireRole('DIETITIAN'
   const plan = await DietPlan.create({ ...data, patient: pid, dietitian: req.user.id, version: (base?.version || 0) + 1, status: 'DRAFT' });
   await audit(req, 'PLAN_CREATED', 'DietPlan', plan._id, `v${plan.version}`);
   res.status(201).json({ plan });
+}));
+
+/* Fully automated: build the next plan from the Lead's Plan Studio rules. It lands in IN_REVIEW for one-click approval.
+   A dietitian's unfinished draft is replaced (the screen asks first). */
+r.post('/patients/:patientId/diet-plans/auto', validObjectId, requireRole('DIETITIAN', 'LEAD_DOCTOR'), requirePatientAccess(), asyncHandler(async (req, res) => {
+  const out = await autoGeneratePlan(req.params.patientId, { req, replaceDraft: true });
+  need(out.plan, 409, out.skipped || 'Could not generate a plan.', 'INVALID_STATE');
+  res.status(201).json({ plan: out.plan });
 }));
 
 r.get('/diet-plans/review-queue', requireRole('LEAD_DOCTOR'), asyncHandler(async (_req, res) => {

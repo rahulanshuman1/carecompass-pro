@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Apple, Download, Smartphone } from 'lucide-react';
 import { APP_LINKS } from '../lib/appLinks';
 import { cx } from './ui';
+import { isNative } from '../lib/native';
 
 let deferred = null; // the browser fires beforeinstallprompt once, keep it for later
 if (typeof window !== 'undefined') window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; window.dispatchEvent(new Event('cc-installable')); });
@@ -24,6 +25,7 @@ const Btn = ({ href, icon: Icon, small, top, bottom, light }) => (
 export default function AppDownload({ variant = 'card', light = false, className = '' }) {
   const { can, install } = useInstall();
   const small = variant === 'inline';
+  if (isNative()) return null; // already inside the app
   return (
     <div className={className}>
       {variant === 'card' && (
@@ -39,7 +41,7 @@ export default function AppDownload({ variant = 'card', light = false, className
           <button onClick={install} className={cx('tap flex items-center gap-2 rounded-2xl border border-dashed px-4 py-3 text-sm font-bold', light ? 'border-white/40 text-white' : 'border-brand-300 text-brand-700 hover:bg-brand-50')}><Download className="h-4 w-4" />Install web app</button>
         )}
       </div>
-      {variant === 'card' && <p className="mt-2.5 text-[11px] text-slate-400">Opens our GitHub Actions page. Open the latest successful run and download the build under “Artifacts”.</p>}
+      {variant === 'card' && <p className="mt-2.5 text-[11px] text-slate-400">Android downloads the APK directly. iPhone: until the App Store version is live, open this page in Safari and use Share, then Add to Home Screen.</p>}
     </div>
   );
 }

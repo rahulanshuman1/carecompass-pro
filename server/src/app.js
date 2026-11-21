@@ -14,6 +14,7 @@ import meRoutes from './routes/me.js';
 import billingRoutes from './routes/billing.js';
 import catalogRoutes from './routes/catalog.js';
 import foodRoutes from './routes/foods.js';
+import studioRoutes from './routes/studio.js';
 import appointmentRoutes from './routes/appointments.js';
 import notificationRoutes from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
@@ -55,6 +56,7 @@ export function createApp() {
   v1.use('/auth', authLimiter, authRoutes);
   v1.use('/plans', catalogRoutes);
   v1.use('/foods', foodRoutes);
+  v1.use('/studio', studioRoutes);
   v1.use('/appointments', appointmentRoutes);
   v1.use('/notifications', notificationRoutes);
   v1.use('/me', meRoutes);

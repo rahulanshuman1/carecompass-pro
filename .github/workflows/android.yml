@@ -1,0 +1,95 @@
+name: Build Android app
+
+# Builds the Capacitor Android app and publishes CareCompass.apk to a rolling GitHub Release
+# ("android-latest"). The website's "Download Android app" button links to that file:
+#   https://github.com/<owner>/<repo>/releases/download/android-latest/CareCompass.apk
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/android.yml']
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: web
+    env:
+      # The app has no Vercel proxy, so it talks to the API directly.
+      # Override with a repository variable API_URL (Settings → Secrets and variables → Actions → Variables).
+      VITE_API_URL: ${{ vars.API_URL || 'https://carecompass-pro.onrender.com/api/v1' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install and build the web app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create the native Android project
+        run: |
+          npx cap add android
+          npx --yes @capacitor/assets@3 generate --android --assetPath assets
+          npx cap sync android
+
+      - name: Configure Android manifest and version
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's#<application#<application android:allowBackup="false"#' "$M"
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n</manifest>#' "$M"
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+
+      - name: Build the APK
+        working-directory: web/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk CareCompass.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CareCompass-apk
+          path: web/CareCompass.apk
+          retention-days: 30
+
+      - name: Move the android-latest tag to this commit
+        working-directory: .
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag -f android-latest
+          git push -f origin android-latest
+
+      - name: Publish the APK to the android-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: CareCompass Android app (latest)
+          body: |
+            Latest Android build of CareCompass (build #${{ github.run_number }}, commit ${{ github.sha }}).
+            Download **CareCompass.apk**, open it on your phone and allow "install unknown apps" if asked.
+          files: web/CareCompass.apk
+          make_latest: true

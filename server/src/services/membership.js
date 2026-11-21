@@ -1,4 +1,5 @@
-import { Membership, Assignment, PatientProfile, User } from '../models/index.js';
+import { Membership, Assignment, DietPlan, PatientProfile, User } from '../models/index.js';
+import { autoGeneratePlan } from './autoplan.js';
 import { assertMembershipTransition } from '../domain/membership.js';
 import { AppError, need } from '../utils/errors.js';
 import { audit } from './audit.js';
@@ -94,6 +95,11 @@ export async function assignDietitian(patientId, dietitianId, req) {
   }
   await audit(req, cur ? 'REASSIGN' : 'ASSIGN', 'Patient', patientId, `to ${dt.name}`);
   if (m.status === 'PENDING_DIETITIAN_ASSIGNMENT') await moveMembership(m, 'ASSIGNED', req, `Assigned to ${dt.name}`);
+  // Fully automated plan: build the first plan from the Lead's Plan Studio rules (goes to the Lead for approval).
+  // Only for patients who have no plan yet, and never blocks the assignment if generation fails.
+  try {
+    if (!(await DietPlan.exists({ patient: patientId }))) await autoGeneratePlan(patientId, { req });
+  } catch (e) { console.error('auto plan failed', e.message); }
   return dt;
 }
 

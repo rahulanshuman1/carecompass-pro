@@ -35,13 +35,18 @@ const publicUser = (u) => ({
 });
 const signAccess = (u) => jwt.sign({ sub: String(u._id), role: u.role }, config.jwt.access, { expiresIn: config.jwt.accessTtl });
 
-async function startSession(user, res) {
+// The Android app (Capacitor) cannot rely on third-party cookies, so it sends `X-Client: native`
+// and keeps the rotating refresh token itself instead of in the httpOnly cookie.
+const isNative = (req) => req.get('x-client') === 'native';
+const readRefresh = (req) => req.cookies?.[COOKIE] || (isNative(req) && typeof req.body?.refreshToken === 'string' ? req.body.refreshToken.slice(0, 200) : '');
+
+async function startSession(user, res, req) {
   const raw = crypto.randomBytes(48).toString('base64url');
   const live = (user.refreshTokens || []).filter((t) => t.expiresAt > new Date()).slice(-4);
   live.push({ hash: hash(raw), expiresAt: new Date(Date.now() + config.jwt.refreshDays * 864e5), createdAt: new Date() });
   await User.updateOne({ _id: user._id }, { $set: { refreshTokens: live, lastLoginAt: new Date() } });
   res.cookie(COOKIE, `${user._id}.${raw}`, cookieOpts());
-  return { accessToken: signAccess(user), user: publicUser(user) };
+  return { accessToken: signAccess(user), user: publicUser(user), ...(req && isNative(req) ? { refreshToken: `${user._id}.${raw}` } : {}) };
 }
 
 r.post(
@@ -56,7 +61,7 @@ r.post(
     req.user = { id: String(user._id), role: 'PATIENT' };
     await audit(req, 'SIGNUP', 'User', user._id);
     const u = await User.findById(user._id).select('+refreshTokens');
-    res.status(201).json(await startSession(u, res));
+    res.status(201).json(await startSession(u, res, req));
   }),
 );
 
@@ -82,14 +87,14 @@ r.post(
     await User.updateOne({ _id: u._id }, { $set: { failedLogins: 0 }, $unset: { lockUntil: 1 } });
     req.user = { id: String(u._id), role: u.role };
     await audit(req, 'LOGIN', 'User', u._id);
-    res.json(await startSession(u, res));
+    res.json(await startSession(u, res, req));
   }),
 );
 
 r.post(
   '/refresh',
   asyncHandler(async (req, res) => {
-    const raw = req.cookies?.[COOKIE];
+    const raw = readRefresh(req);
     const [uid, token] = String(raw || '').split(/\.(.+)/);
     if (!uid || !token || !/^[a-f\d]{24}$/i.test(uid)) throw new AppError(401, 'Signed out', 'UNAUTHENTICATED');
     const u = await User.findById(uid).select('+refreshTokens +photo');
@@ -102,14 +107,14 @@ r.post(
       throw new AppError(401, 'Session expired', 'UNAUTHENTICATED');
     }
     u.refreshTokens = u.refreshTokens.filter((t) => t.hash !== h); // rotate
-    res.json(await startSession(u, res));
+    res.json(await startSession(u, res, req));
   }),
 );
 
 r.post(
   '/logout',
   asyncHandler(async (req, res) => {
-    const [uid, token] = String(req.cookies?.[COOKIE] || '').split(/\.(.+)/);
+    const [uid, token] = String(readRefresh(req) || '').split(/\.(.+)/);
     if (uid && token && /^[a-f\d]{24}$/i.test(uid)) {
       await User.updateOne({ _id: uid }, { $pull: { refreshTokens: { hash: hash(token) } } });
     }

@@ -16,6 +16,7 @@ import MyPatients from './pages/staff/MyPatients';
 import Dashboard from './pages/doctor/Dashboard';
 import Team from './pages/doctor/Team';
 import Reviews from './pages/doctor/Reviews';
+import Studio from './pages/doctor/Studio';
 import Audit from './pages/doctor/Audit';
 import Profile from './pages/Profile';
 import DietitianAgenda from './pages/staff/DietitianAgenda';
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/patients" element={<Guard roles={D}><MyPatients /></Guard>} />
         <Route path="/patient/:id" element={<Guard roles={['CARE_TEAM', 'DIETITIAN', 'LEAD_DOCTOR']}><PatientCase /></Guard>} />
         <Route path="/dashboard" element={<Guard roles={L}><Dashboard /></Guard>} />
+        <Route path="/studio" element={<Guard roles={L}><Studio /></Guard>} />
         <Route path="/team" element={<Guard roles={L}><Team /></Guard>} />
         <Route path="/reviews" element={<Guard roles={L}><Reviews /></Guard>} />
         <Route path="/audit" element={<Guard roles={L}><Audit /></Guard>} />

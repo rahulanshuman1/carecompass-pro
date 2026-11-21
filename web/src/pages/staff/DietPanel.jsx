@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Plus, Search, Sparkles, Trash2, Salad } from 'lucide-react';
+import { MapPin, Plus, Search, Sparkles, Trash2, Salad, Wand2, Flag } from 'lucide-react';
 import { del, post, put } from '../../lib/api';
 import RegionPicker from '../../components/RegionPicker';
 import FoodPicker from '../../components/FoodPicker';
@@ -42,6 +42,19 @@ function PlanSummary({ p }) {
   );
 }
 
+function AutoBanner({ p }) {
+  const a = p?.auto;
+  if (!a?.generated) return null;
+  return (
+    <div className="mb-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-3 text-sm">
+      <p className="flex items-center gap-2 font-semibold text-brand-800"><Wand2 className="h-4 w-4" />Generated automatically from Plan Studio rules (v{a.studioVersion})</p>
+      {a.applied?.length > 0 && <p className="mt-1 text-xs text-slate-600">Rules applied: {a.applied.map((r) => r.name).join(', ')}</p>}
+      {a.flags?.map((f, i) => <p key={i} className="mt-1 flex gap-1.5 text-xs font-semibold text-amber-700"><Flag className="mt-0.5 h-3.5 w-3.5 shrink-0" />{f.rule}: {f.reason}</p>)}
+      {a.warnings?.map((w, i) => <p key={i} className="mt-1 text-xs text-slate-600">Note: {w}</p>)}
+    </div>
+  );
+}
+
 function Builder({ plan, onDone, hasActive, history }) {
   const toast = useToast();
   const [pickFor, setPickFor] = useState(null); // meal index whose catalogue is open
@@ -55,6 +68,7 @@ function Builder({ plan, onDone, hasActive, history }) {
   const [errs, setErrs] = useState([]);
   useEffect(() => setF(toForm(plan)), [plan._id, plan.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
   const planId = plan.id || plan._id;
+  const regen = useMutation({ mutationFn: () => post(`/patients/${plan.patient}/diet-plans/auto`), onSuccess: () => { toast.success('New plan generated and sent for review'); onDone(); }, onError: toast.error });
   const save = useMutation({ mutationFn: () => put(`/diet-plans/${planId}`, toBody(f)) });
   const submit = useMutation({ mutationFn: () => post(`/diet-plans/${planId}/submit`) });
   const discard = useMutation({
@@ -135,6 +149,7 @@ function Builder({ plan, onDone, hasActive, history }) {
       <Field label="Supplements"><Input value={f.supplements} maxLength={300} onChange={(e) => setF({ ...f, supplements: e.target.value })} /></Field>
       <Field label="Notes & follow-up"><Textarea value={f.notes} maxLength={1000} onChange={(e) => setF({ ...f, notes: e.target.value })} /></Field>
       <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="soft" loading={regen.isPending} onClick={() => { if (window.confirm('Replace this draft with a plan generated from the Lead\'s rules?')) regen.mutate(); }}><Wand2 className="h-4 w-4" />Generate automatically</Button>
         <Button variant="ghost" loading={discard.isPending} onClick={cancel}>{hasActive ? 'Cancel revision' : 'Discard draft'}</Button>
         <Button variant="secondary" loading={save.isPending && !submit.isPending} onClick={() => go(false)}>Save draft</Button>
         <Button loading={submit.isPending} onClick={() => go(true)}>Submit for review</Button>
@@ -155,6 +170,7 @@ export default function DietPanel({ data, patientId, role, userId }) {
   const mine = role === 'DIETITIAN' && data.assignment?.dietitian?.id === userId;
 
   const create = useMutation({ mutationFn: () => post(`/patients/${patientId}/diet-plans`), onSuccess: refresh, onError: toast.error });
+  const auto = useMutation({ mutationFn: () => post(`/patients/${patientId}/diet-plans/auto`), onSuccess: () => { toast.success('Plan generated and sent for review'); refresh(); }, onError: toast.error });
   const review = useMutation({
     mutationFn: ({ id, decision }) => post(`/diet-plans/${id}/review`, { decision, note }),
     onSuccess: (_r, v) => { toast.success(v.decision === 'approve' ? 'Plan approved and live for the patient' : 'Changes requested'); setNote(''); refresh(); },
@@ -167,6 +183,7 @@ export default function DietPanel({ data, patientId, role, userId }) {
       {work ? (
         <>
           <div className="mb-3 flex items-center justify-between"><h3>Working plan v{work.version}</h3><StatusBadge status={work.status} /></div>
+          <AutoBanner p={work} />
           {work.status === 'DRAFT' && mine ? <Builder plan={work} onDone={refresh} hasActive={!!active} history={data.profile?.history} /> : (
             <>
               <PlanSummary p={work} />
@@ -185,7 +202,9 @@ export default function DietPanel({ data, patientId, role, userId }) {
           )}
         </>
       ) : mine && data.membership.status === 'ASSIGNED' ? (
-        <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">{active ? 'Need to adjust the live plan? Create a revision. It goes through review again.' : 'No diet plan yet.'}</p><Button onClick={() => create.mutate()} loading={create.isPending}>{active ? 'Create revision' : 'Create diet plan'}</Button></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">{active ? 'Need to adjust the live plan? Create a revision. It goes through review again.' : 'No diet plan yet.'}</p><div className="flex flex-wrap gap-2"><Button variant="soft" onClick={() => auto.mutate()} loading={auto.isPending}><Wand2 className="h-4 w-4" />{active ? 'Generate revision automatically' : 'Generate automatically'}</Button><Button variant="secondary" onClick={() => create.mutate()} loading={create.isPending}>{active ? 'Create revision manually' : 'Create manually'}</Button></div></div>
+      ) : role === 'LEAD_DOCTOR' && data.membership.status === 'ASSIGNED' && !active ? (
+        <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">No diet plan yet. Build one from your Plan Studio rules.</p><Button variant="soft" onClick={() => auto.mutate()} loading={auto.isPending}><Wand2 className="h-4 w-4" />Generate automatically</Button></div>
       ) : !active && <p className="text-sm text-slate-500">No diet plan yet.</p>}
 
       {active && <div className="mt-6"><div className="mb-3 flex items-center gap-2"><h3>Active plan v{active.version}</h3><Badge tone="green">Live for patient</Badge></div><PlanSummary p={active} /></div>}

@@ -1,3 +1,5 @@
+import { getRefreshToken, isNative, setRefreshToken } from './native';
+
 const BASE = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/$/, '');
 
 let accessToken = null;
@@ -17,12 +19,15 @@ export class ApiError extends Error {
 }
 
 async function request(path, { method = 'GET', body, auth = true } = {}) {
+  const native = isNative();
+  // Android app: no cookies; the refresh token travels in the body of refresh/logout calls.
+  if (native && (path === '/auth/refresh' || path === '/auth/logout')) body = { refreshToken: getRefreshToken() };
   let res;
   try {
     res = await fetch(BASE + path, {
       method,
-      credentials: 'include',
-      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(auth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+      credentials: native ? 'omit' : 'include',
+      headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(native ? { 'X-Client': 'native' } : {}), ...(auth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
@@ -33,6 +38,10 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     const e = data?.error || {};
     throw new ApiError(res.status, e.code || 'ERROR', e.message || 'Something went wrong.', e.details);
   }
+  if (native) {
+    if (data.refreshToken) setRefreshToken(data.refreshToken);
+    if (path === '/auth/logout') setRefreshToken('');
+  }
   return data;
 }
 
@@ -40,7 +49,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 export function refreshSession() {
   refreshing ??= request('/auth/refresh', { method: 'POST', auth: false })
     .then((d) => { accessToken = d.accessToken; return d; })
-    .catch(() => { accessToken = null; return null; })
+    .catch((e) => { accessToken = null; if (e?.status === 401) setRefreshToken(''); return null; })
     .finally(() => { refreshing = null; });
   return refreshing;
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags, CalendarDays, CalendarClock, Menu, X } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags, CalendarDays, CalendarClock, Menu, X, Wand2 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { ROLE_LABEL } from '../lib/format';
 import { Avatar, cx } from './ui';
@@ -12,7 +12,7 @@ const NAV = {
   PATIENT: [['/', 'Home', Home, true], ['/my-plan', 'Diet Plan', Salad], ['/meetings', 'Meetings', CalendarClock], ['/history', 'My History', ClipboardList], ['/plans', 'Membership', CreditCard]],
   CARE_TEAM: [['/schedule', 'Schedule', CalendarDays], ['/queue', 'Patients', Inbox], ['/plans-admin', 'Plans', Tags]],
   DIETITIAN: [['/agenda', 'Agenda', CalendarDays], ['/patients', 'My Patients', Users]],
-  LEAD_DOCTOR: [['/dashboard', 'Overview', LayoutDashboard], ['/schedule', 'Schedule', CalendarDays], ['/queue', 'Patients', Users], ['/reviews', 'Reviews', FileCheck2], ['/team', 'Team', UserCog], ['/audit', 'Audit', ShieldCheck]],
+  LEAD_DOCTOR: [['/dashboard', 'Overview', LayoutDashboard], ['/schedule', 'Schedule', CalendarDays], ['/queue', 'Patients', Users], ['/reviews', 'Reviews', FileCheck2], ['/studio', 'Plan Studio', Wand2], ['/team', 'Team', UserCog], ['/audit', 'Audit', ShieldCheck]],
 };
 
 export default function Layout() {

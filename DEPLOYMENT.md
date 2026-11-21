@@ -37,30 +37,51 @@ How plans map: each `MembershipPlan` becomes a Razorpay monthly plan on first ch
 4. Deploy. Add the Vercel URL to `CLIENT_ORIGINS` on Render if you haven't.
 5. Custom domain: add it in Vercel, then append it to `CLIENT_ORIGINS`.
 
-## 5. Android app (Capacitor)
-The native app has no Vercel proxy, so it talks to Render directly.
-1. On Render set `CLIENT_ORIGINS` to include `https://localhost` and set `COOKIE_SAMESITE=none` (cookies are Secure over HTTPS).
-2. In `web/.env.production` set `VITE_API_URL=https://<service>.onrender.com/api/v1`.
-3. Build and open Android Studio:
-   ```bash
-   cd web
-   npm install
-   npx cap add android        # first time only
-   npm run android:sync
-   npm run android:open       # Run ▶ on a device, or Build → Generate Signed Bundle for Play Store
-   ```
-4. Payments in the app open Razorpay's hosted subscription page in the system browser; the webhook activates the membership and the app refreshes when you return.
-5. Hardening: add `android:allowBackup="false"` and `FLAG_SECURE` in the native project, add biometric unlock, and complete Google Play's Data Safety form and a privacy policy.
+## 5. Android and iPhone apps (built by GitHub Actions)
+Two workflows build the apps from the same `web/` code with Capacitor:
 
-> Note: with `COOKIE_SAMESITE=none` the web app should also call the API directly or you should use separate Render services for web and mobile; do not weaken the cookie for the web deployment if you do not need to.
+| Workflow | Runs on | Output |
+|---|---|---|
+| `.github/workflows/android.yml` | every push to `main` touching `web/`, or **Actions → Build Android app → Run workflow** | `CareCompass.apk` on the rolling release **android-latest** (also an artifact) |
+| `.github/workflows/ios.yml` | same | simulator build on release **ios-latest**; a real signed `CareCompass.ipa` only if you add Apple secrets |
 
-## 6. Before real patient data
-- Sign BAAs/DPAs with hosting vendors (Render, Atlas, Vercel, Razorpay) and review India's DPDP Act 2023 and your hospital's compliance requirements.
-- Rotate secrets; keep `PHI_ENCRYPTION_KEY` in a secret manager and plan key rotation.
-- Add MFA for staff accounts, email delivery for staff onboarding (currently the temporary password is shown once in the admin UI), and file upload (lab reports) to encrypted object storage.
-- Set up log shipping and uptime alerts on `/healthz`; take and test database restores.
-- Have a clinician and a security reviewer sign off. This codebase is a strong starting point; it is not a substitute for a compliance review.
+One-time setup:
+1. **Render:** add `https://localhost` to `CLIENT_ORIGINS` (comma-separated, keep your Vercel URL). Leave `COOKIE_SAMESITE` alone: the apps send `X-Client: native` and keep their own rotating refresh token, so they need no cross-site cookies.
+2. **GitHub → Settings → Actions → General → Workflow permissions:** choose *Read and write permissions* (the workflows publish releases).
+3. Optional repo variable `API_URL` (Settings → Secrets and variables → Actions → Variables) if your API is not `https://carecompass-pro.onrender.com/api/v1`.
+4. Push. The Android build takes about 8 to 12 minutes the first time. The APK link is
+   `https://github.com/<owner>/<repo>/releases/download/android-latest/CareCompass.apk`
+   (the repository must be **public** for anyone to download; on a private repo only signed-in collaborators can).
+5. The website's **Download for Android / iPhone** buttons already point at those releases. Override with `VITE_ANDROID_APK_URL` / `VITE_IOS_APP_URL` on Vercel.
+6. Android installs: open the APK on the phone and allow "install unknown apps". These are debug-signed builds, fine for testing. For Google Play you need a release keystore and an AAB build.
 
+### iOS: what is and is not possible without an Apple Developer account
+- Without the paid account ($99/year) the workflow still builds the iOS project and a **simulator** build, which proves it compiles. That build cannot be installed on a real iPhone.
+- iPhone users can meanwhile use the website: Safari → Share → **Add to Home Screen** (it installs as an app).
+- To ship a real iPhone app, enrol in the Apple Developer Program, then add these repository **secrets** and the workflow signs and (optionally) uploads to TestFlight automatically:
+
+| Secret | What it is |
+|---|---|
+| `IOS_CERT_P12_BASE64` | Apple Distribution certificate exported as .p12, base64-encoded |
+| `IOS_CERT_PASSWORD` | the .p12 password |
+| `IOS_PROFILE_BASE64` | provisioning profile for bundle id `com.carecompass.app`, base64-encoded |
+| `APPLE_TEAM_ID` | your 10-character team id |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_BASE64` | App Store Connect API key (only for the TestFlight upload) |
+
+  Then set `VITE_IOS_APP_URL` on Vercel to your TestFlight public link. (Base64 on Windows: `certutil -encode file out.txt`, or on Mac/Linux `base64 -i file`.)
+- Neither workflow has been run yet. Expect to fix small things on the first run (mostly signing).
+- Razorpay checkout inside the apps should be tested on a real device before you rely on it.
+
+## Plan Studio (no-code automated diet plans)
+Lead Doctor → **Plan Studio**. Everything the generator does is configured there, with no code:
+- **Rules**: drag blocks (conditions such as BMI, age, conditions, allergies, goals; actions such as change calories by %, set macro split, leave out foods, add a note, flag for doctor) into IF / THEN rules. Drag the grip to reorder; rules run top to bottom.
+- **Meals**: drag to reorder the day's meals, set times and each meal's share of calories.
+- **Formulas**: BMR formula, activity factors, calorie limits, macro split, water per kg, plan title.
+- **Allergies**: which food words each allergy removes.
+- **Test**: run the on-screen rules on a real or sample patient before saving. Nothing is stored.
+
+Flow: when the care team assigns a dietitian, the system generates the patient's first plan and puts it in **Reviews** (badge "Auto", plus "flagged" if a rule asked for doctor attention). The Lead approves with one click, or requests changes (the dietitian can edit it or press *Generate automatically* again). Nothing reaches the patient before approval. The starter rules are examples, not clinical advice: review them with your clinical team.
+Use **Generate for patients without a plan** to backfill existing assigned patients.
 
 ## Consultations, reminders and app downloads
 
@@ -68,8 +89,8 @@ The native app has no Vercel proxy, so it talks to Render directly.
 |---|---|---|
 | Render (API) | `REMINDER_LEAD_MIN` | Minutes before a consultation that reminders are created (default 30) |
 | Vercel (web) | `VITE_TZ` | Clinic time zone for showing times (default `Asia/Kolkata`; keep it equal to the API's `TZ`) |
-| Vercel (web) | `VITE_ANDROID_APK_URL` | Android download link (default: the GitHub Actions page) |
-| Vercel (web) | `VITE_IOS_APP_URL` | iOS download link (default: the GitHub Actions page) |
+| Vercel (web) | `VITE_ANDROID_APK_URL` | Android download link (default: the `android-latest` release APK) |
+| Vercel (web) | `VITE_IOS_APP_URL` | iOS download link (default: the `ios-latest` release; later your TestFlight link) |
 
 Demo consultations are created on startup when `DEMO_DATA=seed` and there are no appointments yet.
 Reminders are created when people use the app (the bell checks every minute), so no background worker is needed. For reminders
