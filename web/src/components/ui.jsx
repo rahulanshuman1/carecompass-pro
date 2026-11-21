@@ -6,15 +6,15 @@ export const cx = (...a) => a.filter(Boolean).join(' ');
 
 export function Button({ variant = 'primary', size = 'md', loading, disabled, className, children, type = 'button', ...p }) {
   const v = {
-    primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm',
-    secondary: 'bg-white text-slate-800 border border-slate-200 hover:bg-slate-50',
+    primary: 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lift hover:from-brand-600 hover:to-brand-700',
+    secondary: 'bg-white text-ink-800 border border-ink-200 hover:bg-ink-50',
     soft: 'bg-brand-50 text-brand-700 hover:bg-brand-100',
-    ghost: 'text-slate-600 hover:bg-slate-100',
+    ghost: 'text-ink-700 hover:bg-ink-50',
     danger: 'bg-white text-rose-600 border border-rose-200 hover:bg-rose-50',
   }[variant];
-  const s = { sm: 'h-9 px-3 text-sm', md: 'h-11 px-4 text-sm', lg: 'h-12 px-6 text-base' }[size];
+  const s = { sm: 'h-9 px-4 text-sm', md: 'h-11 px-5 text-sm', lg: 'h-12 px-7 text-base' }[size];
   return (
-    <button type={type} disabled={disabled || loading} className={cx('inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition disabled:cursor-not-allowed disabled:opacity-50', v, s, className)} {...p}>
+    <button type={type} disabled={disabled || loading} className={cx('inline-flex items-center justify-center gap-2 rounded-full font-bold transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none', v, s, className)} {...p}>
       {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
       {children}
     </button>
@@ -22,14 +22,14 @@ export function Button({ variant = 'primary', size = 'md', loading, disabled, cl
 }
 
 export const Card = ({ className, children, ...p }) => (
-  <div className={cx('rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft', className)} {...p}>{children}</div>
+  <div className={cx('rounded-3xl border border-ink-100 bg-white p-5 shadow-soft md:p-6', className)} {...p}>{children}</div>
 );
 
 export function CardTitle({ icon: Icon, title, action, sub }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
       <div className="flex items-center gap-2.5">
-        {Icon && <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-700"><Icon className="h-[18px] w-[18px]" /></span>}
+        {Icon && <span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-50 text-brand-600"><Icon className="h-[18px] w-[18px]" /></span>}
         <div><h2 className="leading-tight">{title}</h2>{sub && <p className="text-xs text-slate-500">{sub}</p>}</div>
       </div>
       {action}
@@ -38,7 +38,7 @@ export function CardTitle({ icon: Icon, title, action, sub }) {
 }
 
 const TONES = {
-  slate: 'bg-slate-100 text-slate-600', brand: 'bg-brand-50 text-brand-700', green: 'bg-emerald-50 text-emerald-700',
+  slate: 'bg-ink-50 text-ink-700', brand: 'bg-brand-50 text-brand-700', green: 'bg-emerald-50 text-emerald-700',
   amber: 'bg-amber-50 text-amber-700', rose: 'bg-rose-50 text-rose-700', blue: 'bg-blue-50 text-blue-700',
 };
 export const Badge = ({ tone = 'slate', children, className }) => (
@@ -51,7 +51,7 @@ export function Field({ label: text, error, hint, required, children, className 
   const child = children && typeof children === 'object' && 'props' in children ? { ...children, props: { ...children.props, id: children.props.id || id, 'aria-invalid': error ? true : undefined } } : children;
   return (
     <div className={className}>
-      <label htmlFor={child?.props?.id || id} className="mb-1.5 block text-sm font-medium text-slate-700">
+      <label htmlFor={child?.props?.id || id} className="mb-1.5 block text-sm font-semibold text-ink-800">
         {text}{required && <span className="text-rose-500"> *</span>}
         {hint && <span className="ml-1.5 text-xs font-normal text-slate-400">{hint}</span>}
       </label>
@@ -61,10 +61,10 @@ export function Field({ label: text, error, hint, required, children, className 
   );
 }
 
-const base = 'w-full rounded-xl border bg-white px-3 text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-slate-50';
-export const Input = ({ className, invalid, ...p }) => <input className={cx(base, 'h-11', invalid ? 'border-rose-400' : 'border-slate-200', className)} {...p} />;
-export const Select = ({ className, children, ...p }) => <select className={cx(base, 'h-11 pr-8', 'border-slate-200', className)} {...p}>{children}</select>;
-export const Textarea = ({ className, ...p }) => <textarea className={cx(base, 'min-h-[96px] resize-y border-slate-200 py-2.5', className)} {...p} />;
+const base = 'w-full rounded-2xl border bg-white px-4 text-ink-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15 disabled:bg-ink-50';
+export const Input = ({ className, invalid, ...p }) => <input className={cx(base, 'h-11', invalid ? 'border-rose-400' : 'border-ink-200', className)} {...p} />;
+export const Select = ({ className, children, ...p }) => <select className={cx(base, 'h-11 pr-8', 'border-ink-200', className)} {...p}>{children}</select>;
+export const Textarea = ({ className, ...p }) => <textarea className={cx(base, 'min-h-[96px] resize-y border-ink-200 py-3', className)} {...p} />;
 
 export const Spinner = ({ className }) => <Loader2 className={cx('h-5 w-5 animate-spin text-brand-600', className)} aria-label="Loading" />;
 export const Skeleton = ({ className }) => <div className={cx('animate-pulse rounded-xl bg-slate-200/70', className)} />;
@@ -80,8 +80,8 @@ export function Alert({ tone = 'info', children, className }) {
 
 export function EmptyState({ icon: Icon, title, children }) {
   return (
-    <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-12 text-center">
-      {Icon && <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-slate-100 text-slate-500"><Icon className="h-6 w-6" /></span>}
+    <div className="grid place-items-center rounded-3xl border border-dashed border-ink-200 bg-white/70 px-6 py-12 text-center">
+      {Icon && <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-500"><Icon className="h-6 w-6" /></span>}
       <p className="font-semibold text-slate-800">{title}</p>
       {children && <div className="mt-1 max-w-sm text-sm text-slate-500">{children}</div>}
     </div>
@@ -100,15 +100,15 @@ export function Stat({ label: l, value, sub, icon: Icon }) {
 
 export function ProgressBar({ value = 0, tone = 'brand', label: l }) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
-  const c = tone === 'warn' ? 'bg-amber-500' : tone === 'danger' ? 'bg-rose-500' : 'bg-brand-500';
-  return <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={l}><div className={cx('h-full rounded-full transition-all', c)} style={{ width: `${pct}%` }} /></div>;
+  const c = tone === 'warn' ? 'bg-amber-500' : tone === 'danger' ? 'bg-rose-500' : 'bg-gradient-to-r from-brand-400 to-brand-600';
+  return <div className="h-2.5 w-full overflow-hidden rounded-full bg-ink-50" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={l}><div className={cx('h-full rounded-full transition-all', c)} style={{ width: `${pct}%` }} /></div>;
 }
 
 export const Avatar = ({ name, photo, size = 'md' }) => {
   const dim = { md: 'h-10 w-10 text-sm', lg: 'h-14 w-14 text-lg', xl: 'h-24 w-24 text-3xl' }[size];
   return photo
     ? <img src={photo} alt="" className={cx('shrink-0 rounded-full object-cover ring-1 ring-slate-200', dim)} />
-    : <span className={cx('grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-brand-200 font-bold text-brand-800', dim)} aria-hidden>{initials(name)}</span>;
+    : <span className={cx('grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-brand-300 font-bold text-brand-800', dim)} aria-hidden>{initials(name)}</span>;
 };
 
 export function PageHeader({ title, sub, action }) {
@@ -133,8 +133,8 @@ export function Modal({ open, onClose, title, children, footer }) {
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-lg animate-rise overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-lg animate-rise overflow-y-auto rounded-t-[2rem] bg-white p-6 shadow-2xl sm:rounded-[2rem]">
         <div className="mb-4 flex items-center justify-between"><h2>{title}</h2><button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div>
         {children}
         {footer && <div className="mt-5 flex flex-wrap justify-end gap-2">{footer}</div>}
@@ -144,5 +144,21 @@ export function Modal({ open, onClose, title, children, footer }) {
 }
 
 export const Chip = ({ active, children, ...p }) => (
-  <button type="button" aria-pressed={active} className={cx('inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition', active ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50')} {...p}>{children}</button>
+  <button type="button" aria-pressed={active} className={cx('inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition', active ? 'border-brand-600 bg-brand-600 text-white' : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50')} {...p}>{children}</button>
 );
+
+/** Circular progress ring (value 0-100) with centred content. */
+export function Ring({ value = 0, size = 88, stroke = 9, tone = 'brand', children, label: l }) {
+  const pct = Math.max(0, Math.min(100, value));
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const color = { brand: '#ec3a71', green: '#10b981', blue: '#6366f1', amber: '#f59e0b' }[tone] || '#ec3a71';
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={l ? `${l}: ${Math.round(pct)}%` : undefined}>
+      <svg width={size} height={size} className="-rotate-90" aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1ecf7" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} style={{ transition: 'stroke-dashoffset .6s ease' }} />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center">{children}</div>
+    </div>
+  );
+}

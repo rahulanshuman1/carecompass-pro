@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PatientProfile, Membership, Assignment, DietPlan, AdherenceLog, CareNote, MembershipPlan } from '../models/index.js';
 import { asyncHandler, AppError, need } from '../utils/errors.js';
 import { authenticate, requireRole, validate } from '../middleware/index.js';
+import { REGIONS } from '../data/foods.js';
 import { audit } from '../services/audit.js';
 import { adherenceMap } from '../services/adherence.js';
 import { todayStr, lastNDates } from '../utils/dates.js';
@@ -52,6 +53,9 @@ const historySchema = z.object({
   smoking: z.enum(['Never', 'Former', 'Current']),
   alcohol: z.enum(['Never', 'Occasionally', 'Weekly', 'Daily']),
   dietType: z.enum(['Vegetarian', 'Eggetarian', 'Non-vegetarian', 'Vegan']),
+  country: z.string().trim().max(60).refine((v) => !v || REGIONS[v], 'Choose a listed country.').default(''),
+  state: z.string().trim().max(60).default(''),
+  cuisine: z.string().trim().max(60).default(''),
   dislikes: z.string().max(300).default(''),
   goals: z.string().trim().min(10, 'Describe your health goals (at least 10 characters).').max(1000),
   consent: z.literal(true, { errorMap: () => ({ message: 'Consent is required to submit.' }) }),
@@ -103,7 +107,7 @@ r.get('/diet-plan', asyncHandler(async (req, res) => {
   await audit(req, 'VIEW_OWN_PLAN', 'DietPlan', plan._id);
   res.json({
     plan,
-    today: byDate[today] || { date: today, mealsDone: [], waterMl: 0, weightKg: null },
+    today: byDate[today] || { date: today, mealsDone: [], photos: [], waterMl: 0, weightKg: null },
     week: dates.map((d) => ({ date: d, mealsDone: byDate[d]?.mealsDone || [], waterMl: byDate[d]?.waterMl || 0 })),
     adherence: (await adherenceMap([req.user.id])).get(req.user.id) ?? 0,
   });
@@ -111,17 +115,38 @@ r.get('/diet-plan', asyncHandler(async (req, res) => {
 
 r.put(
   '/adherence/today',
-  validate(z.object({ toggleMealId: z.string().regex(/^[a-f\d]{24}$/i).optional(), addWaterMl: z.number().int().min(1).max(2000).optional(), weightKg: z.number().min(20).max(400).optional() })),
+  validate(z.object({
+    toggleMealId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+    markMealDone: z.object({
+      mealId: z.string().regex(/^[a-f\d]{24}$/i),
+      photo: z.string().max(130_000, 'That photo is too large.').regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, 'Upload a JPEG, PNG or WebP photo.').optional(),
+    }).optional(),
+    removePhotoMealId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+    addWaterMl: z.number().int().min(1).max(2000).optional(),
+    weightKg: z.number().min(20).max(400).optional(),
+  })),
   asyncHandler(async (req, res) => {
     const plan = await DietPlan.findOne({ patient: req.user.id, status: 'ACTIVE' });
     need(plan, 409, 'You do not have an active diet plan yet.', 'NO_ACTIVE_PLAN');
     const date = todayStr(config.tz);
     const log = await AdherenceLog.findOneAndUpdate({ patient: req.user.id, date }, { $setOnInsert: { patient: req.user.id, date } }, { upsert: true, new: true, setDefaultsOnInsert: true });
-    const { toggleMealId, addWaterMl, weightKg } = req.body;
+    const { toggleMealId, markMealDone, removePhotoMealId, addWaterMl, weightKg } = req.body;
+    const inPlan = (id) => plan.meals.some((m) => String(m._id) === id);
     if (toggleMealId) {
-      need(plan.meals.some((m) => String(m._id) === toggleMealId), 400, 'That meal is not in your plan.', 'VALIDATION');
-      log.mealsDone = log.mealsDone.includes(toggleMealId) ? log.mealsDone.filter((x) => x !== toggleMealId) : [...log.mealsDone, toggleMealId];
+      need(inPlan(toggleMealId), 400, 'That meal is not in your plan.', 'VALIDATION');
+      const wasDone = log.mealsDone.includes(toggleMealId);
+      log.mealsDone = wasDone ? log.mealsDone.filter((x) => x !== toggleMealId) : [...log.mealsDone, toggleMealId];
+      if (wasDone) log.photos = log.photos.filter((p) => p.mealId !== toggleMealId); // undoing a meal removes its photo
     }
+    if (markMealDone) {
+      need(inPlan(markMealDone.mealId), 400, 'That meal is not in your plan.', 'VALIDATION');
+      if (!log.mealsDone.includes(markMealDone.mealId)) log.mealsDone.push(markMealDone.mealId);
+      if (markMealDone.photo) {
+        log.photos = log.photos.filter((p) => p.mealId !== markMealDone.mealId);
+        log.photos.push({ mealId: markMealDone.mealId, photo: markMealDone.photo, at: new Date() });
+      }
+    }
+    if (removePhotoMealId) log.photos = log.photos.filter((p) => p.mealId !== removePhotoMealId);
     if (addWaterMl) log.waterMl = Math.min(10000, log.waterMl + addWaterMl);
     if (weightKg) {
       log.weightKg = weightKg;

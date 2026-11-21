@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, Lock, MessageSquare, Activity } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Lock, MessageSquare, Activity, Camera } from 'lucide-react';
 import { api, post } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../lib/toast';
 import { ageFrom, fmtDate, fmtDateTime, label } from '../../lib/format';
-import { Alert, Avatar, Badge, Button, Card, CardTitle, Input, PageLoader, ProgressBar, StatusBadge } from '../../components/ui';
+import { Alert, Avatar, Badge, Button, Card, CardTitle, Input, Modal, PageLoader, ProgressBar, StatusBadge } from '../../components/ui';
 import MembershipPanel from './MembershipPanel';
 import DietPanel from './DietPanel';
 
@@ -31,6 +31,7 @@ function History({ p }) {
         {h.clinicalRestricted ? <Row k="Medications / labs"><span className="inline-flex items-center gap-1.5 text-slate-500"><Lock className="h-3.5 w-3.5" />Restricted to clinical staff</span></Row> : <><Row k="Medications">{h.medications}</Row><Row k="Lab notes">{h.labNotes}</Row></>}
         <Row k="Lifestyle">{h.activity} · sleep {h.sleepHrs} h · smoking: {h.smoking} · alcohol: {h.alcohol}</Row>
         <Row k="Diet">{h.dietType}{h.dislikes ? ` · dislikes: ${h.dislikes}` : ''}</Row>
+        <Row k="Food region">{[h.cuisine, h.state, h.country].filter(Boolean).join(' · ')}</Row>
         <Row k="Goals">{h.goals}</Row>
       </dl>
     </Card>
@@ -59,6 +60,35 @@ function Notes({ p, id, role }) {
           </div>
         ))}
       </div>
+    </Card>
+  );
+}
+
+function MealDiary({ id }) {
+  const [view, setView] = useState(null);
+  const { data, isLoading } = useQuery({ queryKey: ['meal-diary', id], queryFn: () => api(`/patients/${id}/meal-diary`) });
+  if (isLoading) return null;
+  return (
+    <Card>
+      <CardTitle icon={Camera} title="Meal diary" sub="Photos the patient attached when marking meals done (last 14 days)" />
+      {!data?.days?.length ? <p className="text-sm text-slate-500">No meal photos yet.</p> : (
+        <div className="space-y-4">
+          {data.days.map((d) => (
+            <div key={d.date}>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">{fmtDate(d.date)}</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {d.photos.map((p) => (
+                  <button key={p.mealId} type="button" onClick={() => setView(p)} className="group overflow-hidden rounded-2xl border border-ink-100 text-left">
+                    <img src={p.photo} alt={p.meal} className="h-28 w-full object-cover transition group-hover:scale-105" />
+                    <p className="truncate px-2.5 py-1.5 text-xs font-semibold text-ink-800">{p.meal}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <Modal open={!!view} onClose={() => setView(null)} title={view?.meal || 'Meal photo'}>{view && <img src={view.photo} alt={view.meal} className="w-full rounded-2xl" />}</Modal>
     </Card>
   );
 }
@@ -97,6 +127,7 @@ export default function PatientCase() {
       {user.role !== 'CARE_TEAM' && <DietPanel data={data} patientId={id} role={user.role} userId={user.id} />}
       <History p={data} />
       {user.role !== 'CARE_TEAM' && <Adherence a={data.adherence} />}
+      {user.role !== 'CARE_TEAM' && <MealDiary id={id} />}
       <Notes p={data} id={id} role={user.role} />
     </div>
   );

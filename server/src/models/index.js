@@ -71,6 +71,9 @@ const profileSchema = new Schema(
       smoking: String,
       alcohol: String,
       dietType: String,
+      country: String,
+      state: String,
+      cuisine: String,
       dislikes: String,
       goals: String,
       consentAt: Date,
@@ -159,6 +162,7 @@ const dietPlanSchema = new Schema(
       fat: { type: Number, default: 60 },
       waterMl: { type: Number, default: 2500 },
     },
+    region: { country: { type: String, default: '' }, state: { type: String, default: '' }, cuisine: { type: String, default: '' } },
     supplements: { type: String, default: '' },
     notes: { type: String, default: '' },
     reviewNote: { type: String, default: '' },
@@ -179,6 +183,8 @@ const adherenceSchema = new Schema(
     patient: ref('User', { required: true }),
     date: { type: String, required: true }, // YYYY-MM-DD in APP_TIMEZONE
     mealsDone: [String],
+    // optional meal-diary photos (small JPEG data URLs, max ~110 KB each)
+    photos: [{ mealId: String, photo: String, note: { type: String, default: '' }, at: { type: Date, default: Date.now }, _id: false }],
     waterMl: { type: Number, default: 0, min: 0, max: 10000 },
     weightKg: Number,
   },

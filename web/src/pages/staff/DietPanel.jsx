@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Salad } from 'lucide-react';
+import { MapPin, Plus, Search, Sparkles, Trash2, Salad } from 'lucide-react';
 import { del, post, put } from '../../lib/api';
+import RegionPicker from '../../components/RegionPicker';
+import FoodPicker from '../../components/FoodPicker';
 import { useToast } from '../../lib/toast';
 import { itemsKcal, planKcal } from '../../lib/format';
 import { Alert, Badge, Button, Card, CardTitle, Field, Input, StatusBadge, Textarea } from '../../components/ui';
 
 const blankItem = () => ({ name: '', qty: '', kcal: '' });
 const toForm = (p) => ({
+  region: { country: p.region?.country || '', state: p.region?.state || '', cuisine: p.region?.cuisine || '' },
   title: p.title || '', startDate: p.startDate || '', targets: { ...p.targets }, supplements: p.supplements || '', notes: p.notes || '',
   meals: (p.meals || []).map((m) => ({ time: m.time, name: m.name, items: (m.items || []).map((i) => ({ name: i.name, qty: i.qty || '', kcal: i.kcal })) })),
 });
@@ -22,6 +25,7 @@ function PlanSummary({ p }) {
   const meals = [...p.meals].sort((a, b) => a.time.localeCompare(b.time));
   return (
     <div>
+      {(p.region?.country || p.region?.cuisine) && <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-500"><MapPin className="h-3.5 w-3.5" />{[p.region.cuisine, p.region.state, p.region.country].filter(Boolean).join(' · ')}</p>}
       <div className="mb-3 flex flex-wrap gap-1.5">{[`${t.kcal} kcal`, `P ${t.protein} g`, `C ${t.carbs} g`, `F ${t.fat} g`, `${t.waterMl} ml water`].map((x) => <Badge key={x} tone="brand">{x}</Badge>)}<Badge>Meals total {planKcal(p)} kcal</Badge></div>
       <div className="space-y-2">
         {meals.map((m, i) => (
@@ -38,8 +42,15 @@ function PlanSummary({ p }) {
   );
 }
 
-function Builder({ plan, onDone, hasActive }) {
+function Builder({ plan, onDone, hasActive, history }) {
   const toast = useToast();
+  const [pickFor, setPickFor] = useState(null); // meal index whose catalogue is open
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000) + 1);
+  const suggest = useMutation({
+    mutationFn: () => post('/foods/suggest', { ...f.region, diet: history?.dietType || '', kcal: Number(f.targets.kcal) || 1800, seed }),
+    onSuccess: (r) => { setF((s) => ({ ...s, meals: r.meals })); setSeed((x) => x + 1); toast.success('Starter day created. Review and adjust it.'); },
+    onError: toast.error,
+  });
   const [f, setF] = useState(() => toForm(plan));
   const [errs, setErrs] = useState([]);
   useEffect(() => setF(toForm(plan)), [plan._id, plan.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -77,6 +88,12 @@ function Builder({ plan, onDone, hasActive }) {
     <div className="space-y-4">
       {plan.reviewNote && <Alert tone="warn"><strong>Doctor requested changes:</strong> {plan.reviewNote}</Alert>}
       {errs.length > 0 && <Alert tone="error"><ul className="list-disc pl-4">{errs.map((e, i) => <li key={i}>{e}</li>)}</ul></Alert>}
+      <div className="rounded-3xl border border-brand-100 bg-brand-50/50 p-4">
+        <p className="flex items-center gap-2 text-sm font-extrabold text-ink-900"><MapPin className="h-4 w-4 text-brand-500" />Cuisine and region</p>
+        <p className="mb-3 mt-0.5 text-xs text-slate-600">{history ? `Patient eats: ${[history.dietType, history.cuisine, history.state, history.country].filter(Boolean).join(' · ') || 'not specified'}${history.dislikes ? ` · dislikes: ${history.dislikes}` : ''}.` : 'Choose the food culture this plan is built around.'}</p>
+        <RegionPicker value={f.region} onChange={(region) => setF((s) => ({ ...s, region }))} />
+        <Button variant="secondary" size="sm" className="mt-3" loading={suggest.isPending} disabled={!f.region.country} onClick={() => { if (f.meals.some((m) => m.items.length) && !window.confirm('Replace the current meals with a new starter day?')) return; suggest.mutate(); }}><Sparkles className="h-4 w-4" />Suggest a day from this cuisine</Button>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Plan title" required><Input value={f.title} maxLength={120} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
         <Field label="Start date" required><Input type="date" value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} /></Field>
@@ -88,8 +105,8 @@ function Builder({ plan, onDone, hasActive }) {
       <div className="flex items-center justify-between"><h3>Meals</h3><span className={`text-xs font-semibold ${off ? 'text-amber-600' : 'text-slate-500'}`}>Total {total} / {target} kcal</span></div>
       {f.meals.map((m, i) => (
         <div key={i} className="rounded-2xl border border-slate-200 p-4">
-          <div className="grid grid-cols-[110px_1fr_auto] items-end gap-3">
-            <Field label="Time"><Input type="time" value={m.time} onChange={(e) => upMeal(i, { time: e.target.value })} /></Field>
+          <div className="grid grid-cols-[140px_1fr_auto] items-end gap-3">
+            <Field label="Time"><Input type="time" className="min-w-[8.5rem]" value={m.time} onChange={(e) => upMeal(i, { time: e.target.value })} /></Field>
             <Field label="Meal name"><Input value={m.name} maxLength={40} onChange={(e) => upMeal(i, { name: e.target.value })} placeholder="Breakfast" /></Field>
             <Button variant="ghost" size="sm" aria-label="Remove meal" onClick={() => setF((s) => ({ ...s, meals: s.meals.filter((_, k) => k !== i) }))}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
           </div>
@@ -102,12 +119,19 @@ function Builder({ plan, onDone, hasActive }) {
                 <button type="button" aria-label="Remove food" className="px-1 text-slate-400 hover:text-rose-500" onClick={() => upMeal(i, { items: m.items.filter((_, n) => n !== j) })}><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
-            <Button variant="soft" size="sm" onClick={() => upMeal(i, { items: [...m.items, blankItem()] })}><Plus className="h-4 w-4" />Add food</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="soft" size="sm" onClick={() => setPickFor(i)}><Search className="h-4 w-4" />Browse foods</Button>
+              <Button variant="secondary" size="sm" onClick={() => upMeal(i, { items: [...m.items, blankItem()] })}><Plus className="h-4 w-4" />Custom food</Button>
+            </div>
           </div>
         </div>
       ))}
       <Button variant="secondary" onClick={() => setF((s) => ({ ...s, meals: [...s.meals, { time: '12:00', name: '', items: [blankItem()] }] }))}><Plus className="h-4 w-4" />Add meal</Button>
 
+      {pickFor != null && f.meals[pickFor] && (
+        <FoodPicker open onClose={() => setPickFor(null)} region={f.region} diet={history?.dietType} mealName={f.meals[pickFor].name}
+          onAdd={(item) => setF((s) => ({ ...s, meals: s.meals.map((m, k) => (k === pickFor ? { ...m, items: [...m.items.filter((x) => x.name.trim() || x.kcal !== ''), item] } : m)) }))} />
+      )}
       <Field label="Supplements"><Input value={f.supplements} maxLength={300} onChange={(e) => setF({ ...f, supplements: e.target.value })} /></Field>
       <Field label="Notes & follow-up"><Textarea value={f.notes} maxLength={1000} onChange={(e) => setF({ ...f, notes: e.target.value })} /></Field>
       <div className="flex flex-wrap justify-end gap-2">
@@ -143,7 +167,7 @@ export default function DietPanel({ data, patientId, role, userId }) {
       {work ? (
         <>
           <div className="mb-3 flex items-center justify-between"><h3>Working plan v{work.version}</h3><StatusBadge status={work.status} /></div>
-          {work.status === 'DRAFT' && mine ? <Builder plan={work} onDone={refresh} hasActive={!!active} /> : (
+          {work.status === 'DRAFT' && mine ? <Builder plan={work} onDone={refresh} hasActive={!!active} history={data.profile?.history} /> : (
             <>
               <PlanSummary p={work} />
               {work.status === 'IN_REVIEW' && role === 'LEAD_DOCTOR' && (

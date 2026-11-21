@@ -68,10 +68,10 @@ export default function Plans() {
           const chosen = m.plan?.id === p.id || m.plan?._id === p.id;
           const requested = m.requestedPlan?.id === p.id;
           return (
-            <Card key={p.id} className={`flex flex-col ${featured ? 'border-brand-400 ring-1 ring-brand-300' : ''}`}>
+            <Card key={p.id} className={`flex flex-col transition hover:-translate-y-1 ${featured ? 'border-brand-300 bg-gradient-to-b from-brand-50 to-white shadow-lift ring-2 ring-brand-300' : ''}`}>
               {featured && <Badge tone="brand" className="mb-2 self-start">Most popular</Badge>}
               <h2 className="text-xl">{p.name}</h2>
-              <p className="mt-2"><span className="text-3xl font-extrabold tracking-tight text-slate-900">{inr(p.priceInr)}</span><span className="text-sm text-slate-500"> / month</span></p>
+              <p className="mt-2"><span className="text-4xl font-extrabold tracking-tight text-ink-900">{inr(p.priceInr)}</span><span className="text-sm text-slate-500"> / month</span></p>
               <p className="text-xs text-slate-500">{p.cycles} monthly payments · {inr(p.priceInr * p.cycles)} total</p>
               <ul className="mb-5 mt-4 flex-1 space-y-2.5 text-sm text-slate-700">
                 {p.features.map((x) => <li key={x} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />{x}</li>)}

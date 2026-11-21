@@ -6,6 +6,7 @@ import { useToast } from '../../lib/toast';
 import { isoDate, todayLocal } from '../../lib/format';
 import { Alert, Button, Card, CardTitle, Chip, Field, Input, PageHeader, PageLoader, Select, Textarea } from '../../components/ui';
 import { useMe } from './Home';
+import RegionPicker from '../../components/RegionPicker';
 import { Activity, HeartPulse, UserRound, Utensils } from 'lucide-react';
 
 const CONDS = ['Type 2 Diabetes', 'Hypertension', 'PCOS', 'Thyroid disorder', 'High cholesterol', 'Obesity', 'Kidney disease', 'IBS / gut issues'];
@@ -28,7 +29,7 @@ export default function History() {
       conditions: (h.conditions || []).filter((c) => CONDS.includes(c)), otherConditions: (h.conditions || []).filter((c) => !CONDS.includes(c)).join(', '),
       allergies: (h.allergies || []).join(', '), medications: h.medications || '', labNotes: h.labNotes || '',
       activity: h.activity || 'Lightly active', sleepHrs: h.sleepHrs ?? 7, smoking: h.smoking || 'Never', alcohol: h.alcohol || 'Never',
-      dietType: h.dietType || 'Vegetarian', dislikes: h.dislikes || '', goals: h.goals || '', consent: !!h.consentAt,
+      dietType: h.dietType || 'Vegetarian', country: h.country || 'India', state: h.state || '', cuisine: h.cuisine || '', dislikes: h.dislikes || '', goals: h.goals || '', consent: !!h.consentAt,
     });
   }, [data, f]);
 
@@ -47,7 +48,7 @@ export default function History() {
     save.mutate({
       dob: f.dob, sex: f.sex, phone: f.phone, heightCm: f.heightCm, weightKg: f.weightKg,
       conditions: [...f.conditions, ...csv(f.otherConditions)], allergies: csv(f.allergies), medications: f.medications, labNotes: f.labNotes,
-      activity: f.activity, sleepHrs: f.sleepHrs, smoking: f.smoking, alcohol: f.alcohol, dietType: f.dietType, dislikes: f.dislikes, goals: f.goals, consent: f.consent,
+      activity: f.activity, sleepHrs: f.sleepHrs, smoking: f.smoking, alcohol: f.alcohol, dietType: f.dietType, country: f.country, state: f.state, cuisine: f.cuisine, dislikes: f.dislikes, goals: f.goals, consent: f.consent,
     });
   }
   const submitted = !!data.profile?.historySubmittedAt;
@@ -97,6 +98,11 @@ export default function History() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Diet type"><Select value={f.dietType} onChange={set('dietType')}>{['Vegetarian', 'Eggetarian', 'Non-vegetarian', 'Vegan'].map((x) => <option key={x}>{x}</option>)}</Select></Field>
           <Field label="Foods you dislike"><Input value={f.dislikes} onChange={set('dislikes')} /></Field>
+          <div className="sm:col-span-2">
+            <p className="mb-1 text-sm font-bold text-ink-900">Where is your food from?</p>
+            <p className="mb-3 text-xs text-slate-500">Your dietitian builds your plan around the dishes you actually eat at home.</p>
+            <RegionPicker value={{ country: f.country, state: f.state, cuisine: f.cuisine }} onChange={(r) => setF((s) => ({ ...s, ...r }))} />
+          </div>
           <Field label="Health goals" required error={fe.goals} className="sm:col-span-2"><Textarea value={f.goals} onChange={set('goals')} placeholder="e.g. Lower HbA1c below 7% and lose 6 kg in 4 months" /></Field>
         </div>
         <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">

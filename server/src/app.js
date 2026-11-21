@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.js';
 import meRoutes from './routes/me.js';
 import billingRoutes from './routes/billing.js';
 import catalogRoutes from './routes/catalog.js';
+import foodRoutes from './routes/foods.js';
 import adminRoutes from './routes/admin.js';
 import staffRoutes from './routes/staff.js';
 import dietRoutes from './routes/dietplans.js';
@@ -51,6 +52,7 @@ export function createApp() {
   const v1 = express.Router();
   v1.use('/auth', authLimiter, authRoutes);
   v1.use('/plans', catalogRoutes);
+  v1.use('/foods', foodRoutes);
   v1.use('/me', meRoutes);
   v1.use('/me', billingRoutes);
   v1.use('/admin', adminRoutes);

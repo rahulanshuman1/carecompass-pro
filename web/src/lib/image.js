@@ -27,3 +27,34 @@ export function photoToDataUrl(file, size = 256, maxChars = 120_000) {
     reader.readAsDataURL(file);
   });
 }
+
+/** Resizes a meal photo to fit within maxSide px (keeps aspect ratio) and returns a JPEG data URL under maxChars. */
+export function mealPhotoToDataUrl(file, maxSide = 720, maxChars = 110_000) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type)) return reject(new Error('Please choose an image file.'));
+    if (file.size > 15 * 1024 * 1024) return reject(new Error('That image is too large (max 15 MB).'));
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read that file.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const w = Math.round(img.width * k), h = Math.round(img.height * k);
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          let q = 0.8, out = c.toDataURL('image/jpeg', q);
+          while (out.length > maxChars && q > 0.35) { q -= 0.08; out = c.toDataURL('image/jpeg', q); }
+          if (out.length > maxChars) return reject(new Error('That photo is too detailed to upload. Try a smaller one.'));
+          resolve(out);
+        } catch { reject(new Error('Could not process that photo.')); }
+      };
+      img.onerror = () => reject(new Error('Could not read that image. Try a JPEG or PNG.'));
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
