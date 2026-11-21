@@ -69,7 +69,7 @@ export default function Studio() {
         {tab === 'test' && <TestTab s={s} meta={meta} />}
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-slate-200 bg-white/95 backdrop-blur md:bottom-0">
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-slate-200 bg-white/95 backdrop-blur xl:bottom-0">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-8">
           <p className={cx('text-sm font-semibold', dirty ? 'text-amber-700' : 'text-slate-500')}>{dirty ? 'You have unsaved changes' : 'All changes saved'}</p>
           <div className="flex gap-2">

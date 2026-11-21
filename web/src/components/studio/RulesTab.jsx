@@ -127,7 +127,7 @@ export default function RulesTab({ s, setS, meta }) {
     setRules((l) => l.map((r) => (r.id !== tgt ? r : kind === 'cond' ? { ...r, conditions: [...r.conditions, newCondition(meta, id)] } : { ...r, actions: [...r.actions, newAction(id)] })));
   };
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-3">
         <p className="text-sm text-slate-600">Rules run from top to bottom for every patient. Drag the grip to reorder, drag blocks from the palette into a rule, or open a rule and tap a block.</p>
         <Sortable items={rules} onChange={setRules} className="space-y-3" render={(r, i, handle) => (

@@ -1,0 +1,9 @@
+1. Android build (.github/workflows/android.yml)
+   The "Configure Android manifest" step added a second android:allowBackup attribute to AndroidManifest.xml,
+   which already has one. Gradle failed with "Error parsing AndroidManifest.xml". The step now changes the existing
+   value, adds the camera permission once, and checks the file is valid XML before building.
+
+2. Plan Studio layout (and other pages)
+   Grids used a bare "1fr" column, which cannot shrink below its content, so long rule text stretched the page to
+   2,500 px. Columns are now minmax(0,1fr) and every grid has a one-column phone layout.
+   The lead doctor's top bar (7 menu items) no longer overflows: below 1280 px it uses the bottom tab bar.

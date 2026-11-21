@@ -18,6 +18,7 @@ const NAV = {
 export default function Layout() {
   const { user, logout } = useAuth();
   const nav = NAV[user.role];
+  const crowded = nav.length > 5; // lead doctor: seven destinations need the room
   const loc = useLocation();
   const [more, setMore] = useState(false);
   useEffect(() => { setMore(false); }, [loc.pathname]);
@@ -31,7 +32,7 @@ export default function Layout() {
       <header className="pt-safe sticky top-0 z-30 border-b border-ink-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-8">
           <Brand compact />
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+          <nav className={cx('hidden items-center gap-1', crowded ? 'xl:flex' : 'md:flex')} aria-label="Main">
             {nav.map(([to, text, Icon, end]) => (
               <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition lg:px-4', isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-50')}>
                 <Icon className="h-[17px] w-[17px]" />{text}
@@ -40,19 +41,19 @@ export default function Layout() {
           </nav>
           <div className="flex items-center gap-2">
             <NotificationBell />
-            <NavLink to="/profile" className="flex shrink-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 hover:bg-ink-50 xl:pr-3" title="Edit profile" aria-label="My profile">
+            <NavLink to="/profile" className={cx('flex shrink-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 hover:bg-ink-50', crowded ? '2xl:pr-3' : 'xl:pr-3')} title="Edit profile" aria-label="My profile">
               <Avatar name={user.name} photo={user.photo} />
-              <span className="hidden min-w-0 leading-tight xl:block"><span className="block max-w-[140px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-xs text-slate-500">{ROLE_LABEL[user.role]}</span></span>
+              <span className={cx('hidden min-w-0 leading-tight', crowded ? '2xl:block' : 'xl:block')}><span className="block max-w-[140px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-xs text-slate-500">{ROLE_LABEL[user.role]}</span></span>
             </NavLink>
-            <button onClick={logout} className="hidden h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 px-3.5 text-sm font-semibold text-ink-700 hover:bg-ink-50 md:flex" aria-label="Sign out"><LogOut className="h-4 w-4" /><span className="hidden xl:inline">Sign out</span></button>
+            <button onClick={logout} className={cx('hidden h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 px-3.5 text-sm font-semibold text-ink-700 hover:bg-ink-50', crowded ? 'xl:flex' : 'md:flex')} aria-label="Sign out"><LogOut className="h-4 w-4" /><span className={cx('hidden', crowded ? '2xl:inline' : 'xl:inline')}>Sign out</span></button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pb-14 md:pt-10"><div className="animate-rise"><Outlet /></div></main>
+      <main className={cx('mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pt-10', crowded ? 'xl:pb-14' : 'md:pb-14')}><div className="animate-rise"><Outlet /></div></main>
 
       {/* Bottom tabs (phones) */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white/95 backdrop-blur md:hidden" aria-label="Main">
+      <nav className={cx('pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white/95 backdrop-blur', crowded ? 'xl:hidden' : 'md:hidden')} aria-label="Main">
         {tabs.map(([to, text, Icon, end]) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', isActive ? 'text-brand-700' : 'text-slate-500')}>
             {({ isActive }) => (<><span className={cx('rounded-full px-4 py-1 transition', isActive && 'bg-brand-50')}><Icon className="h-5 w-5" /></span><span className="max-w-full truncate px-0.5">{text}</span></>)}
@@ -67,7 +68,7 @@ export default function Layout() {
 
       {/* "More" sheet (phones) */}
       {more && (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="More">
+        <div className={cx('fixed inset-0 z-40', crowded ? 'xl:hidden' : 'md:hidden')} role="dialog" aria-modal="true" aria-label="More">
           <button className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" onClick={() => setMore(false)} aria-label="Close menu" />
           <div className="pb-safe absolute inset-x-0 bottom-0 max-h-[85vh] animate-slideUp overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl">
             <div className="mb-3 flex items-center justify-between"><h2>More</h2><button onClick={() => setMore(false)} className="rounded-full p-2 text-slate-400 hover:bg-ink-50" aria-label="Close"><X className="h-5 w-5" /></button></div>

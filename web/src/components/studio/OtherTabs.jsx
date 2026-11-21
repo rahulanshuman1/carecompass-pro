@@ -103,7 +103,7 @@ export function AllergensTab({ s, setS }) {
       <Alert tone="info">When a patient lists an allergy, any food whose name contains one of the "Leave out foods containing" words is never chosen. An allergy that is not listed here is matched by its own text.</Alert>
       {s.allergens.map((a) => (
         <Card key={a.id} className="!p-4">
-          <div className="grid gap-3 md:grid-cols-[200px_1fr_1fr_auto] md:items-start">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-start">
             <Field label="Allergy"><Input value={a.name} maxLength={40} onChange={(e) => up(a.id, { name: e.target.value })} /></Field>
             <Field label="Patient writes (matches)"><TagInput value={a.aliases} onChange={(v) => up(a.id, { aliases: v })} placeholder="peanut, groundnut…" /></Field>
             <Field label="Leave out foods containing"><TagInput value={a.foodWords} onChange={(v) => up(a.id, { foodWords: v })} placeholder="milk, curd…" /></Field>

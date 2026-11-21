@@ -11,7 +11,7 @@ import MembershipPanel from './MembershipPanel';
 import DietPanel from './DietPanel';
 
 const Row = ({ k, children }) => (
-  <div className="grid gap-1 border-b border-slate-100 py-2.5 text-sm last:border-0 sm:grid-cols-[150px_1fr]"><dt className="text-slate-500">{k}</dt><dd className="text-slate-900">{children || <span className="text-slate-400">—</span>}</dd></div>
+  <div className="grid grid-cols-1 gap-1 border-b border-slate-100 py-2.5 text-sm last:border-0 sm:grid-cols-[150px_minmax(0,1fr)]"><dt className="text-slate-500">{k}</dt><dd className="text-slate-900">{children || <span className="text-slate-400">—</span>}</dd></div>
 );
 
 function History({ p }) {

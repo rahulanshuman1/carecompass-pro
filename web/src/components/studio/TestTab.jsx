@@ -38,7 +38,7 @@ export default function TestTab({ s, meta }) {
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
   const fm = meta.fields;
   return (
-    <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
       <Card>
         <CardTitle icon={Play} title="Try your rules" sub="Uses what is on screen, saved or not" />
         <div className="space-y-3">

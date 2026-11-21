@@ -119,14 +119,14 @@ function Builder({ plan, onDone, hasActive, history }) {
       <div className="flex items-center justify-between"><h3>Meals</h3><span className={`text-xs font-semibold ${off ? 'text-amber-600' : 'text-slate-500'}`}>Total {total} / {target} kcal</span></div>
       {f.meals.map((m, i) => (
         <div key={i} className="rounded-2xl border border-slate-200 p-4">
-          <div className="grid grid-cols-[140px_1fr_auto] items-end gap-3">
+          <div className="grid grid-cols-[140px_minmax(0,1fr)_auto] items-end gap-3">
             <Field label="Time"><Input type="time" className="min-w-[8.5rem]" value={m.time} onChange={(e) => upMeal(i, { time: e.target.value })} /></Field>
             <Field label="Meal name"><Input value={m.name} maxLength={40} onChange={(e) => upMeal(i, { name: e.target.value })} placeholder="Breakfast" /></Field>
             <Button variant="ghost" size="sm" aria-label="Remove meal" onClick={() => setF((s) => ({ ...s, meals: s.meals.filter((_, k) => k !== i) }))}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
           </div>
           <div className="mt-3 space-y-2">
             {m.items.map((it, j) => (
-              <div key={j} className="grid grid-cols-[1fr_88px_72px_auto] gap-2">
+              <div key={j} className="grid grid-cols-[minmax(0,1fr)_88px_72px_auto] gap-2">
                 <Input aria-label="Food" placeholder="Food" value={it.name} onChange={(e) => upItem(i, j, { name: e.target.value })} />
                 <Input aria-label="Quantity" placeholder="Qty" value={it.qty} onChange={(e) => upItem(i, j, { qty: e.target.value })} />
                 <Input aria-label="Calories" type="number" inputMode="numeric" placeholder="kcal" value={it.kcal} onChange={(e) => upItem(i, j, { kcal: e.target.value })} />
