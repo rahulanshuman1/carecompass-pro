@@ -1,15 +1,23 @@
 {
   "name": "CareCompass",
   "short_name": "CareCompass",
-  "description": "Hospital and dietitian care management",
+  "description": "Diet plans, dietitian consultations and daily tracking",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f8fafc",
-  "theme_color": "#1f7f7a",
+  "background_color": "#fbf9fd",
+  "theme_color": "#d42459",
+  "categories": ["health", "medical", "lifestyle"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "My consultations", "url": "/meetings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Today's diet plan", "url": "/my-plan", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

@@ -18,6 +18,9 @@ import Team from './pages/doctor/Team';
 import Reviews from './pages/doctor/Reviews';
 import Audit from './pages/doctor/Audit';
 import Profile from './pages/Profile';
+import DietitianAgenda from './pages/staff/DietitianAgenda';
+import ClinicSchedule from './pages/staff/ClinicSchedule';
+import PatientMeetings from './pages/patient/Meetings';
 
 function Guard({ roles, children }) {
   const { user } = useAuth();
@@ -38,6 +41,9 @@ export default function App() {
         <Route path="/history" element={<Guard roles={P}><PatientHistory /></Guard>} />
         <Route path="/plans" element={<Guard roles={P}><PatientPlans /></Guard>} />
         <Route path="/my-plan" element={<Guard roles={P}><PatientDiet /></Guard>} />
+        <Route path="/meetings" element={<Guard roles={P}><PatientMeetings /></Guard>} />
+        <Route path="/agenda" element={<Guard roles={D}><DietitianAgenda /></Guard>} />
+        <Route path="/schedule" element={<Guard roles={S}><ClinicSchedule /></Guard>} />
         <Route path="/queue" element={<Guard roles={S}><Queue /></Guard>} />
         <Route path="/plans-admin" element={<Guard roles={C}><PlansAdmin /></Guard>} />
         <Route path="/patients" element={<Guard roles={D}><MyPatients /></Guard>} />

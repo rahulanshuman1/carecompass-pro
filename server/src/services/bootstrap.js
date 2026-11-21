@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { config } from '../config.js';
-import { User, MembershipPlan, Assignment, DietPlan } from '../models/index.js';
+import { User, MembershipPlan, Assignment, DietPlan, Appointment, Notification } from '../models/index.js';
 import { seedPlans } from '../scripts/_common.js';
-import { seedDemoData, purgeDemoData, DEMO_PASSWORD } from './demoData.js';
+import { seedDemoData, seedDemoAppointments, purgeDemoData, DEMO_PASSWORD } from './demoData.js';
 
 /**
  * Runs at every startup (no Shell access needed, e.g. on Render's free plan). Idempotent:
@@ -11,7 +11,7 @@ import { seedDemoData, purgeDemoData, DEMO_PASSWORD } from './demoData.js';
  *  - creates the default membership plans if the catalog is empty
  */
 export async function bootstrap() {
-  for (const [name, model] of [['Assignment', Assignment], ['DietPlan', DietPlan]]) {
+  for (const [name, model] of [['Assignment', Assignment], ['DietPlan', DietPlan], ['Appointment', Appointment], ['Notification', Notification]]) {
     try { await model.syncIndexes(); } catch (e) { console.error(`Index sync failed for ${name}:`, e.message); }
   }
 
@@ -38,6 +38,8 @@ export async function bootstrap() {
     try {
       await seedDemoData();
       console.log(`Bootstrap: demo data ready. All demo accounts use password ${DEMO_PASSWORD} (emails end with @demo.com)`);
+      const n = await seedDemoAppointments();
+      if (n) console.log(`Bootstrap: created ${n} demo consultations`);
     } catch (e) { console.error('Bootstrap: demo seeding failed:', e.message); }
   } else if (config.demoData === 'purge') {
     console.log(`Bootstrap: removed ${await purgeDemoData()} demo users and their records`);

@@ -141,6 +141,48 @@ const assignmentSchema = new Schema(
 assignmentSchema.index({ patient: 1 }, { name: 'one_open_assignment_per_patient', unique: true, partialFilterExpression: { isOpen: true } });
 export const Assignment = model('Assignment', assignmentSchema);
 
+/* ---------------- Consultations (meetings) and notifications ---------------- */
+const appointmentSchema = new Schema(
+  {
+    patient: ref('User', { required: true }),
+    dietitian: ref('User', { required: true }),
+    startsAt: { type: Date, required: true },
+    durationMin: { type: Number, default: 30, min: 10, max: 120 },
+    mode: { type: String, enum: ['VIDEO', 'PHONE', 'IN_PERSON'], default: 'VIDEO' },
+    meetingLink: { type: String, default: '', maxlength: 300 },
+    topic: { type: String, default: 'Diet consultation', trim: true, maxlength: 120 },
+    status: { type: String, enum: ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'], default: 'SCHEDULED' },
+    rescheduleCount: { type: Number, default: 0 },
+    history: [{ from: Date, to: Date, by: ref('User'), reason: { type: String, default: '' }, at: { type: Date, default: Date.now }, _id: false }],
+    cancelReason: { type: String, default: '' },
+    outcomeNotes: { type: String, default: '', maxlength: 1000 },
+    createdBy: ref('User'),
+  },
+  { timestamps: true },
+);
+appointmentSchema.index({ dietitian: 1, startsAt: 1 });
+appointmentSchema.index({ patient: 1, startsAt: 1 });
+appointmentSchema.index({ startsAt: 1, status: 1 });
+export const Appointment = model('Appointment', appointmentSchema);
+
+const notificationSchema = new Schema(
+  {
+    user: ref('User', { required: true }),
+    kind: { type: String, required: true },
+    title: { type: String, required: true, maxlength: 140 },
+    body: { type: String, default: '', maxlength: 400 },
+    link: { type: String, default: '' },
+    appointment: ref('Appointment'),
+    dedupeKey: String,
+    readAt: Date,
+  },
+  { timestamps: true },
+);
+notificationSchema.index({ user: 1, createdAt: -1 });
+// The same reminder is never created twice for the same person
+notificationSchema.index({ user: 1, dedupeKey: 1 }, { unique: true, partialFilterExpression: { dedupeKey: { $type: 'string' } } });
+export const Notification = model('Notification', notificationSchema);
+
 /* ---------------- Diet plans ---------------- */
 const mealSchema = new Schema({
   time: { type: String, required: true },

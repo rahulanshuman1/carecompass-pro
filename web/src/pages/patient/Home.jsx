@@ -2,6 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, CreditCard, Droplets, Flame, Utensils, Scale, Camera, MapPin, Sparkles } from 'lucide-react';
 import { api } from '../../lib/api';
+import { countdown, endsAt, minutesUntil, useNow } from '../../lib/time';
+import { Counter, Reveal } from '../../components/Motion';
+import AppDownload from '../../components/AppDownload';
+import { NextMeeting } from './Meetings';
 import { inr, label, itemsKcal } from '../../lib/format';
 import { Alert, Avatar, Badge, Card, CardTitle, PageLoader, Ring, StatusBadge, cx } from '../../components/ui';
 
@@ -23,6 +27,8 @@ export default function PatientHome() {
   const { data, isLoading, error } = useMe();
   const activeId = data?.activePlan?.id || data?.activePlan?._id;
   const diet = useQuery({ queryKey: ['diet'], queryFn: () => api('/me/diet-plan'), enabled: !!activeId });
+  const appts = useQuery({ queryKey: ['appts', 'mine'], queryFn: () => api('/appointments/mine'), refetchInterval: 60_000 });
+  const now = useNow(30_000);
   if (isLoading) return <PageLoader />;
   if (error) return <Alert tone="error">{error.message}</Alert>;
   const { user, profile, membership: m, dietitian, activePlan, adherence } = data;
@@ -40,6 +46,8 @@ export default function PatientHome() {
   const h = profile?.history || {};
   const place = [h.state, h.country].filter(Boolean).join(', ');
 
+  const nextMeeting = appts.data?.items?.find((x) => x.status === 'SCHEDULED' && endsAt(x).getTime() > now);
+  const meetMins = nextMeeting ? minutesUntil(nextMeeting.startsAt, now) : null;
   const d = diet.data;
   const meals = d?.plan ? [...d.plan.meals].sort((a, b) => a.time.localeCompare(b.time)) : [];
   const mid = (x) => x._id || x.id;
@@ -79,17 +87,20 @@ export default function PatientHome() {
       {st === 'CANCELLED' && <Alert tone="error">Your membership was cancelled. Contact the care team to restart.</Alert>}
       {m.paymentStatus === 'PAST_DUE' && <Alert tone="warn">Your last subscription payment did not go through. Please update your payment method with Razorpay to keep your plan active.</Alert>}
 
+      {nextMeeting && meetMins > 0 && meetMins <= 30 && <Alert tone="warn">Reminder: your consultation with {nextMeeting.dietitian?.name} starts {countdown(meetMins)}.</Alert>}
+      {nextMeeting && <Reveal><NextMeeting a={nextMeeting} now={now} /></Reveal>}
+
       {/* Today at a glance */}
       {activePlan && d?.plan && (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Tile icon={Utensils} title="Meals today" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900">{doneToday}</strong> / {meals.length} done</p>}>
+            <Tile icon={Utensils} title="Meals today" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900"><Counter value={doneToday} /></strong> / {meals.length} done</p>}>
               <Ring value={meals.length ? (doneToday / meals.length) * 100 : 0} size={56} stroke={7} label="Meals today"><Check className="h-4 w-4 text-brand-500" /></Ring>
             </Tile>
-            <Tile icon={Droplets} title="Water" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900">{d.today.waterMl}</strong> / {d.plan.targets.waterMl} ml</p>}>
+            <Tile icon={Droplets} title="Water" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900"><Counter value={d.today.waterMl} /></strong> / {d.plan.targets.waterMl} ml</p>}>
               <Ring value={(d.today.waterMl / d.plan.targets.waterMl) * 100} size={56} stroke={7} tone="blue" label="Water"><Droplets className="h-4 w-4 text-indigo-500" /></Ring>
             </Tile>
-            <Tile icon={Flame} title="Weekly adherence" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900">{adherence ?? 0}%</strong> this week</p>}>
+            <Tile icon={Flame} title="Weekly adherence" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900"><Counter value={adherence ?? 0} suffix="%" /></strong> this week</p>}>
               <Ring value={adherence ?? 0} size={56} stroke={7} tone={(adherence ?? 0) < 50 ? 'amber' : 'green'} label="Weekly adherence"><Flame className="h-4 w-4 text-emerald-500" /></Ring>
             </Tile>
             <Tile icon={Scale} title="Weight" sub={<p className="mt-0.5 text-sm text-slate-600"><strong className="text-xl text-ink-900">{d.today.weightKg || profile?.weightKg || '—'}</strong> kg</p>}>
@@ -149,6 +160,7 @@ export default function PatientHome() {
           </Card>
         </div>
       </div>
+      <Reveal i={2}><Card><AppDownload /></Card></Reveal>
     </div>
   );
 }

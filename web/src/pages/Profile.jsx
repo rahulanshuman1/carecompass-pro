@@ -6,6 +6,7 @@ import { fieldErrors } from '../lib/api';
 import { photoToDataUrl } from '../lib/image';
 import { ROLE_LABEL } from '../lib/format';
 import { Alert, Avatar, Button, Card, Field, Input, PageHeader } from '../components/ui';
+import AppDownload from '../components/AppDownload';
 
 export default function Profile() {
   const { user, updateProfile, setPhoto } = useAuth();
@@ -63,6 +64,7 @@ export default function Profile() {
           <Button type="submit" loading={busy}>Save changes</Button>
         </form>
       </Card>
+      <Card className="mt-5"><AppDownload /></Card>
     </div>
   );
 }

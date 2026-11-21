@@ -14,6 +14,14 @@
 }
 
 @layer utilities {
+  /* staggered entrance: <div className="reveal" style={{ '--i': 3 }}> */
+  .reveal { animation: reveal .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+  .tap { transition: transform .15s ease, box-shadow .2s ease; }
+  .tap:hover { transform: translateY(-2px); }
+  .tap:active { transform: scale(.98); }
+  .bg-shimmer { background-image: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .35) 50%, transparent 70%); background-size: 200% 100%; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
   .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .scroll-hide::-webkit-scrollbar { display: none; }

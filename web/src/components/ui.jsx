@@ -106,7 +106,7 @@ export function ProgressBar({ value = 0, tone = 'brand', label: l }) {
 }
 
 export const Avatar = ({ name, photo, size = 'md' }) => {
-  const dim = { md: 'h-10 w-10 text-sm', lg: 'h-14 w-14 text-lg', xl: 'h-24 w-24 text-3xl' }[size];
+  const dim = { sm: 'h-8 w-8 text-xs', md: 'h-10 w-10 text-sm', lg: 'h-14 w-14 text-lg', xl: 'h-24 w-24 text-3xl' }[size];
   return photo
     ? <img src={photo} alt="" className={cx('shrink-0 rounded-full object-cover ring-1 ring-slate-200', dim)} />
     : <span className={cx('grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-brand-300 font-bold text-brand-800', dim)} aria-hidden>{initials(name)}</span>;

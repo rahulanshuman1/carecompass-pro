@@ -17,4 +17,4 @@ export const STATUS_TONE = {
 };
 
 export const ROLE_LABEL = { PATIENT: 'Patient', CARE_TEAM: 'Care Team', DIETITIAN: 'Dietitian', LEAD_DOCTOR: 'Lead Doctor' };
-export const homeFor = (role) => ({ PATIENT: '/', CARE_TEAM: '/queue', DIETITIAN: '/patients', LEAD_DOCTOR: '/dashboard' }[role] || '/');
+export const homeFor = (role) => ({ PATIENT: '/', CARE_TEAM: '/queue', DIETITIAN: '/agenda', LEAD_DOCTOR: '/dashboard' }[role] || '/');

@@ -60,3 +60,17 @@ The native app has no Vercel proxy, so it talks to Render directly.
 - Add MFA for staff accounts, email delivery for staff onboarding (currently the temporary password is shown once in the admin UI), and file upload (lab reports) to encrypted object storage.
 - Set up log shipping and uptime alerts on `/healthz`; take and test database restores.
 - Have a clinician and a security reviewer sign off. This codebase is a strong starting point; it is not a substitute for a compliance review.
+
+
+## Consultations, reminders and app downloads
+
+| Where | Variable | Purpose |
+|---|---|---|
+| Render (API) | `REMINDER_LEAD_MIN` | Minutes before a consultation that reminders are created (default 30) |
+| Vercel (web) | `VITE_TZ` | Clinic time zone for showing times (default `Asia/Kolkata`; keep it equal to the API's `TZ`) |
+| Vercel (web) | `VITE_ANDROID_APK_URL` | Android download link (default: the GitHub Actions page) |
+| Vercel (web) | `VITE_IOS_APP_URL` | iOS download link (default: the GitHub Actions page) |
+
+Demo consultations are created on startup when `DEMO_DATA=seed` and there are no appointments yet.
+Reminders are created when people use the app (the bell checks every minute), so no background worker is needed. For reminders
+while the app is closed you would add web push, email or WhatsApp later.

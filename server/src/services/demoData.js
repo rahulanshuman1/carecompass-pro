@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { config } from '../config.js';
-import { User, PatientProfile, Membership, Assignment, DietPlan, AdherenceLog, CareNote, MembershipPlan } from '../models/index.js';
+import { User, PatientProfile, Membership, Assignment, DietPlan, AdherenceLog, CareNote, MembershipPlan, Appointment, Notification } from '../models/index.js';
 import { seedPlans } from '../scripts/_common.js';
-import { lastNDates } from '../utils/dates.js';
+import { lastNDates, todayStr } from '../utils/dates.js';
+import { zonedStartOfDay } from '../domain/appointments.js';
 
 export const DEMO_PASSWORD = 'Demo@Care2026';
 export const DEMO_ACCOUNTS = [
@@ -84,7 +85,41 @@ export async function purgeDemoData() {
     Assignment.deleteMany({ $or: [{ patient: { $in: ids } }, { dietitian: { $in: ids } }] }),
     DietPlan.deleteMany({ $or: [{ patient: { $in: ids } }, { dietitian: { $in: ids } }] }),
     AdherenceLog.deleteMany({ patient: { $in: ids } }), CareNote.deleteMany({ $or: [{ patient: { $in: ids } }, { author: { $in: ids } }] }),
+    Appointment.deleteMany({ $or: [{ patient: { $in: ids } }, { dietitian: { $in: ids } }] }), Notification.deleteMany({ user: { $in: ids } }),
   ]);
   await User.deleteMany({ _id: { $in: ids } });
   return ids.length;
+}
+
+/**
+ * Demo consultations, relative to "now" so the dashboards always have something today, tomorrow and yesterday.
+ * Runs only when there are no appointments yet, so it is safe on every startup.
+ */
+export async function seedDemoAppointments() {
+  if (await Appointment.exists({})) return 0;
+  const [d1, d2, priya, vikram, care] = await Promise.all(['meera@demo.com', 'rohan@demo.com', 'priya@demo.com', 'vikram@demo.com', 'care@demo.com'].map((e) => User.findOne({ email: e })));
+  if (!d1 || !d2 || !priya || !vikram) return 0;
+  const [a1, a2] = await Promise.all([Assignment.exists({ patient: priya._id, dietitian: d1._id, isOpen: true }), Assignment.exists({ patient: vikram._id, dietitian: d2._id, isOpen: true })]);
+  const MIN = 60_000, now = Date.now();
+  const round = (ms) => Math.ceil(ms / (5 * MIN)) * 5 * MIN;
+  const day0 = zonedStartOfDay(todayStr(config.tz), config.tz).getTime();
+  const at = (dayOffset, h, m = 0) => new Date(day0 + dayOffset * 864e5 + (h * 60 + m) * MIN);
+  const link = 'https://meet.example.com/carecompass-demo';
+  const rows = [];
+  const add = (patient, dietitian, startsAt, o = {}) => rows.push({ patient: patient._id, dietitian: dietitian._id, startsAt, durationMin: 30, mode: 'VIDEO', meetingLink: link, topic: 'Diet consultation', createdBy: care?._id || dietitian._id, ...o });
+  if (a1) {
+    add(priya, d1, at(-1, 11), { status: 'COMPLETED', topic: 'Weekly review', outcomeNotes: 'Fasting sugars improving. Continue the plan; add a 20-minute walk after lunch.' });
+    add(priya, d1, new Date(round(now + 25 * MIN)), { topic: 'Weekly review' });
+    add(priya, d1, new Date(round(now + 4 * 3600e3)), { mode: 'PHONE', meetingLink: '', topic: 'Quick check-in', durationMin: 15 });
+    add(priya, d1, at(1, 10, 30), { topic: 'Meal plan walkthrough', rescheduleCount: 1, history: [{ from: at(1, 9), to: at(1, 10, 30), by: d1._id, reason: 'Dietitian training session' }] });
+    add(priya, d1, at(3, 17), { topic: 'Monthly progress review' });
+  }
+  if (a2) {
+    add(vikram, d2, at(-1, 16), { status: 'COMPLETED', topic: 'Plan discussion', outcomeNotes: 'Agreed on a low-sodium plan; submitted for doctor review.' });
+    add(vikram, d2, new Date(round(now + 2 * 3600e3)), { topic: 'Plan follow-up' });
+    add(vikram, d2, at(1, 15), { mode: 'IN_PERSON', meetingLink: '', topic: 'Body composition check' });
+    add(vikram, d2, at(2, 11), { status: 'CANCELLED', cancelReason: 'Patient travelling', topic: 'Follow-up' });
+  }
+  if (rows.length) await Appointment.insertMany(rows);
+  return rows.length;
 }

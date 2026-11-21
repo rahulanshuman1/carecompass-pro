@@ -1,4 +1,5 @@
 import Logo from '../components/Logo';
+import AppDownload from '../components/AppDownload';
 import { useState } from 'react';
 import { HeartPulse, ShieldCheck, Salad, Camera } from 'lucide-react';
 import { useAuth } from '../lib/auth';
@@ -66,6 +67,7 @@ export default function Login() {
               </button>
             </p>
           </div>
+          <div className="mt-7"><p className="mb-2.5 text-center text-xs font-bold uppercase tracking-wider text-slate-400">Get the app</p><AppDownload variant="inline" /></div>
           <p className="mt-6 text-center text-xs text-slate-400">Staff accounts are created by your hospital administrator.</p>
         </div>
       </div>
