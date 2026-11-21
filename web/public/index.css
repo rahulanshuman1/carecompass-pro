@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-[#fbf9fd] text-slate-700 antialiased font-sans; }
+  h1 { @apply text-2xl font-extrabold tracking-tight text-ink-900 md:text-3xl; }
+  h2 { @apply text-lg font-bold text-ink-900; }
+  h3 { @apply text-base font-bold text-ink-900; }
+  :focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-2; }
+  input, select, textarea { font-size: 16px; } /* prevents iOS zoom on focus */
+  @media (min-width: 640px) { input, select, textarea { font-size: 14px; } }
+}
+
+@layer utilities {
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .scroll-hide::-webkit-scrollbar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---- Animated logo ---- */
+.cc-anim svg, .cc-anim { overflow: visible; }
+.cc-anim .cc-needle, .cc-anim .cc-wobble, .cc-anim .cc-heart { transform-box: view-box; transform-origin: 32px 32px; }
+.cc-anim .cc-ring { animation: cc-draw 1s cubic-bezier(.65,0,.35,1) both; }
+.cc-anim .cc-tick { animation: cc-fade .4s .7s ease-out both; }
+.cc-anim .cc-needle { animation: cc-swing 1.9s .35s cubic-bezier(.3,1.2,.5,1) both; }
+.cc-anim .cc-wobble { animation: cc-wobble 5s 2.6s ease-in-out infinite; }
+.cc-anim .cc-heart { animation: cc-beat 1.8s 1.2s ease-in-out infinite; }
+.cc-anim .cc-shine { animation: cc-sweep 5s 2s ease-in-out infinite; }
+.cc-word { display: inline-block; animation: cc-slide .6s cubic-bezier(.2,.8,.2,1) both; }
+.cc-word-1 { animation-delay: .5s; }
+.cc-word-2 { animation-delay: .7s; }
+@keyframes cc-draw { from { stroke-dashoffset: 135; } to { stroke-dashoffset: 0; } }
+@keyframes cc-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cc-swing { 0% { transform: rotate(-220deg) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: rotate(45deg) scale(1); opacity: 1; } }
+@keyframes cc-wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
+@keyframes cc-beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.2); } 30% { transform: scale(.95); } 42% { transform: scale(1.12); } }
+@keyframes cc-sweep { 0%, 55% { transform: translateX(0) rotate(20deg); } 100% { transform: translateX(120px) rotate(20deg); } }
+@keyframes cc-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cc-anim *, .cc-word { animation: none !important; }
+  .cc-anim .cc-needle { transform: rotate(45deg); }
+}
