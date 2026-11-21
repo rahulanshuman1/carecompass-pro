@@ -1,5 +1,6 @@
+import Logo from './Logo';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, Stethoscope, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { ROLE_LABEL } from '../lib/format';
 import { Avatar, cx } from './ui';
@@ -53,10 +54,5 @@ export default function Layout() {
 }
 
 export function Brand({ compact }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-white shadow-lift"><Stethoscope className="h-5 w-5" /></span>
-      <span className={cx('font-extrabold tracking-tight text-ink-900', compact ? 'text-lg' : 'text-xl')}>Care<span className="text-brand-600">Compass</span></span>
-    </div>
-  );
+  return <Logo compact={compact} size={compact ? 34 : 40} />;
 }
