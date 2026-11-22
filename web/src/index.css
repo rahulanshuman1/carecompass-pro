@@ -52,3 +52,19 @@
   .cc-anim *, .cc-word { animation: none !important; }
   .cc-anim .cc-needle { transform: rotate(45deg); }
 }
+
+/* ---- Mobile app launch screen and first-open entrance ---- */
+.splash { transition: opacity .6s ease, transform .8s cubic-bezier(.7, 0, .2, 1); }
+.splash.out { opacity: 0; transform: translateY(-6%) scale(1.06); pointer-events: none; }
+.splash-word { animation: splash-rise .8s .45s cubic-bezier(.2, .8, .2, 1) both; }
+.splash-tag { animation: splash-rise .8s .85s cubic-bezier(.2, .8, .2, 1) both; }
+.splash-bar { animation: splash-fill 2.1s .15s cubic-bezier(.4, 0, .2, 1) both; }
+@keyframes splash-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes splash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* the login sheet slides up from the bottom */
+.sheet-in { animation: slideUp .7s cubic-bezier(.2, .8, .2, 1) both; }
+/* while the launch screen is up, hold back the entrance animations so they play as it lifts away */
+html.booting .reveal { animation-delay: calc(var(--i, 0) * 80ms + 1.8s); }
+html.booting .sheet-in { animation-delay: 1.7s; }
+
+html.boot-dark, html.boot-dark body { background: #1d1330; }

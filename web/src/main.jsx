@@ -5,7 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { AuthProvider } from './lib/auth';
 import { ToastProvider } from './lib/toast';
+import NativeSplash from './components/NativeSplash';
+import { isNative } from './lib/native';
 import './index.css';
+
+if (isNative()) document.documentElement.classList.add('booting');
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <ToastProvider>
           <AuthProvider>
             <App />
+            <NativeSplash />
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>
@@ -31,5 +36,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 );
 
-// installable web app (production only)
-if (import.meta.env.PROD && 'serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+// the website is not offered as an installable app: remove any service worker an earlier version registered
+if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});

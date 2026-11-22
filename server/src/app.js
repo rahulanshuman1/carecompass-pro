@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import { corsDelegate } from './utils/cors.js';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
@@ -31,14 +32,7 @@ export function createApp() {
 
   app.use(helmet());
   app.use(
-    cors({
-      origin(origin, cb) {
-        if (!origin || config.origins.includes(origin)) return cb(null, true);
-        cb(new AppError(403, 'Origin not allowed', 'CORS'));
-      },
-      credentials: true,
-      maxAge: 600,
-    }),
+    cors(corsDelegate(config.origins)),
   );
   // Log path only, never the query string (search terms can contain patient names)
   morgan.token('safe-path', (req) => (req.originalUrl || req.url).split('?')[0]);

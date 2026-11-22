@@ -1,0 +1,18 @@
+Mobile app login ("Cannot reach the server")
+  server/src/utils/cors.js (new), server/src/app.js, server/tests/cors.test.js (new)
+  The API rejected the Android app's origin (https://localhost). It now accepts the app origins by itself, without credentials.
+  Only the server needs redeploying for this fix (push, wait for Render).
+
+Header
+  web/src/components/Layout.jsx: new header (gradient accent line, pill menu bar, bell, account menu with My profile and Sign out).
+  Nothing can be cut off any more: checked for 4 roles x 6 screen widths.
+
+Remove "Install web app"
+  web/src/components/AppDownload.jsx, web/src/main.jsx, web/index.html (manifest link removed), web/public/sw.js (deleted).
+
+Mobile app look and launch animation
+  web/src/components/NativeSplash.jsx (new), web/public/boot.js (new), web/src/index.css, web/src/main.jsx,
+  web/src/pages/Login.jsx (phone layout), web/capacitor.config.json (dark start colour).
+  Push to GitHub: the Android workflow rebuilds the APK because files under web/ changed.
+
+Earlier fixes (still included): Android manifest step in .github/workflows/android.yml, Plan Studio layout.

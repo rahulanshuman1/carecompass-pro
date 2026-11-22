@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Logo from './Logo';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags, CalendarDays, CalendarClock, Menu, X, Wand2 } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags, CalendarDays, CalendarClock, Menu, X, Wand2, ChevronDown, UserRound } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { ROLE_LABEL } from '../lib/format';
 import { Avatar, cx } from './ui';
@@ -15,12 +15,56 @@ const NAV = {
   LEAD_DOCTOR: [['/dashboard', 'Overview', LayoutDashboard], ['/schedule', 'Schedule', CalendarDays], ['/queue', 'Patients', Users], ['/reviews', 'Reviews', FileCheck2], ['/studio', 'Plan Studio', Wand2], ['/team', 'Team', UserCog], ['/audit', 'Audit', ShieldCheck]],
 };
 
+/** Avatar button with a small menu: profile and sign out. Replaces a separate Sign out button that could get cut off. */
+function UserMenu({ user, logout }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => { if (e.type === 'keydown' ? e.key === 'Escape' : !box.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close); document.addEventListener('keydown', close);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', close); };
+  }, [open]);
+  return (
+    <div className="relative" ref={box}>
+      <button onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" className={cx('flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-1 transition hover:bg-ink-50 sm:pr-2.5', open ? 'border-ink-200 bg-ink-50' : 'border-transparent')}>
+        <Avatar name={user.name} photo={user.photo} />
+        <span className="hidden min-w-0 text-left leading-tight xl:block"><span className="block max-w-[130px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-[11px] font-semibold text-slate-500">{ROLE_LABEL[user.role]}</span></span>
+        <ChevronDown className={cx('hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-[calc(100%+.6rem)] z-50 w-72 origin-top-right animate-pop overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-2xl">
+          <div className="flex items-center gap-3 bg-gradient-to-br from-brand-50 to-ink-50 p-4">
+            <Avatar name={user.name} photo={user.photo} size="lg" />
+            <div className="min-w-0">
+              <p className="truncate font-extrabold text-ink-900">{user.name}</p>
+              {user.email && <p className="truncate text-xs text-slate-500">{user.email}</p>}
+              <span className="mt-1.5 inline-block rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-brand-700 shadow-sm">{ROLE_LABEL[user.role]}</span>
+            </div>
+          </div>
+          <div className="space-y-0.5 p-2">
+            <Link to="/profile" role="menuitem" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-bold text-ink-800 hover:bg-ink-50"><UserRound className="h-[18px] w-[18px] text-slate-500" />My profile</Link>
+            <button role="menuitem" onClick={logout} className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50"><LogOut className="h-[18px] w-[18px]" />Sign out</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const nav = NAV[user.role];
   const crowded = nav.length > 5; // lead doctor: seven destinations need the room
   const loc = useLocation();
   const [more, setMore] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const f = () => setScrolled(window.scrollY > 4);
+    f();
+    window.addEventListener('scroll', f, { passive: true });
+    return () => window.removeEventListener('scroll', f);
+  }, []);
   useEffect(() => { setMore(false); }, [loc.pathname]);
   // phones: first four destinations as tabs, the rest (and the app downloads) under "More"
   const tabs = nav.length > 4 ? nav.slice(0, 4) : nav;
@@ -29,23 +73,23 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       {/* Top navigation */}
-      <header className="pt-safe sticky top-0 z-30 border-b border-ink-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-8">
-          <Brand compact />
-          <nav className={cx('hidden items-center gap-1', crowded ? 'xl:flex' : 'md:flex')} aria-label="Main">
-            {nav.map(([to, text, Icon, end]) => (
-              <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition lg:px-4', isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-50')}>
-                <Icon className="h-[17px] w-[17px]" />{text}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <NavLink to="/profile" className={cx('flex shrink-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 hover:bg-ink-50', crowded ? '2xl:pr-3' : 'xl:pr-3')} title="Edit profile" aria-label="My profile">
-              <Avatar name={user.name} photo={user.photo} />
-              <span className={cx('hidden min-w-0 leading-tight', crowded ? '2xl:block' : 'xl:block')}><span className="block max-w-[140px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-xs text-slate-500">{ROLE_LABEL[user.role]}</span></span>
-            </NavLink>
-            <button onClick={logout} className={cx('hidden h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 px-3.5 text-sm font-semibold text-ink-700 hover:bg-ink-50', crowded ? 'xl:flex' : 'md:flex')} aria-label="Sign out"><LogOut className="h-4 w-4" /><span className={cx('hidden', crowded ? '2xl:inline' : 'xl:inline')}>Sign out</span></button>
+      <header className="pt-safe sticky top-0 z-30">
+        <div aria-hidden className="h-[3px] bg-gradient-to-r from-brand-400 via-brand-600 to-ink-800" />
+        <div className={cx('border-b bg-white/85 backdrop-blur-xl transition-shadow duration-300', scrolled ? 'border-ink-100 shadow-[0_10px_30px_-18px_rgba(43,29,66,.45)]' : 'border-transparent')}>
+          <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
+            <Brand compact />
+            {/* destinations: the active one shows its name; others show their name from lg (icons only when there are many) */}
+            <nav className={cx('mx-auto hidden items-center gap-0.5 rounded-full bg-ink-50/80 p-1 ring-1 ring-ink-100', crowded ? 'xl:flex' : 'md:flex')} aria-label="Main">
+              {nav.map(([to, text, Icon, end]) => (
+                <NavLink key={to} to={to} end={end} title={text} aria-label={text} className={({ isActive }) => cx('inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold transition-all duration-200', isActive ? 'bg-white text-brand-700 shadow-sm ring-1 ring-ink-100' : 'text-ink-700 hover:bg-white/70')}>
+                  {({ isActive }) => (<><Icon className="h-[17px] w-[17px] shrink-0" /><span className={cx(!isActive && (crowded ? 'hidden' : 'hidden xl:inline'))}>{text}</span></>)}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+              <NotificationBell />
+              <UserMenu user={user} logout={logout} />
+            </div>
           </div>
         </div>
       </header>

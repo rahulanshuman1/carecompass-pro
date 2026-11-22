@@ -46,7 +46,7 @@ Two workflows build the apps from the same `web/` code with Capacitor:
 | `.github/workflows/ios.yml` | same | simulator build on release **ios-latest**; a real signed `CareCompass.ipa` only if you add Apple secrets |
 
 One-time setup:
-1. **Render:** add `https://localhost` to `CLIENT_ORIGINS` (comma-separated, keep your Vercel URL). Leave `COOKIE_SAMESITE` alone: the apps send `X-Client: native` and keep their own rotating refresh token, so they need no cross-site cookies.
+1. **Render:** nothing to add. The API now accepts the apps' own origins (`https://localhost` on Android, `capacitor://localhost` on iOS) by itself, without credentials, so `CLIENT_ORIGINS` only needs your website URL. (Older note: adding `https://localhost` to `CLIENT_ORIGINS` also works.) Leave `COOKIE_SAMESITE` alone: the apps send `X-Client: native` and keep their own rotating refresh token.
 2. **GitHub → Settings → Actions → General → Workflow permissions:** choose *Read and write permissions* (the workflows publish releases).
 3. Optional repo variable `API_URL` (Settings → Secrets and variables → Actions → Variables) if your API is not `https://carecompass-pro.onrender.com/api/v1`.
 4. Push. The Android build takes about 8 to 12 minutes the first time. The APK link is
