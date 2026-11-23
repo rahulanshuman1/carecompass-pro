@@ -32,5 +32,8 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // phones held sideways: wide but very short
+    ({ addVariant }) => addVariant('short-land', '@media (orientation: landscape) and (max-height: 520px)'),
+  ],
 };

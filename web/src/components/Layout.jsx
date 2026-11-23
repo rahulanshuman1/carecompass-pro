@@ -127,7 +127,7 @@ export default function Layout() {
       {more && (
         <div className={cx('fixed inset-0 z-40', crowded ? 'lg:hidden' : 'md:hidden')} role="dialog" aria-modal="true" aria-label="More">
           <button className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" onClick={() => setMore(false)} aria-label="Close menu" />
-          <div className="pb-safe absolute inset-x-0 bottom-0 max-h-[85vh] animate-slideUp overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl">
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] animate-slideUp overflow-y-auto rounded-t-[2rem] bg-white px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl">
             <div className="mb-3 flex items-center justify-between"><h2>More</h2><button onClick={() => setMore(false)} className="rounded-full p-2 text-slate-400 hover:bg-ink-50" aria-label="Close"><X className="h-5 w-5" /></button></div>
             <div className="grid grid-cols-3 gap-2.5">
               {rest.map(([to, text, Icon]) => (

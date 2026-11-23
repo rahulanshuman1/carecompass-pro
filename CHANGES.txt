@@ -1,17 +1,16 @@
-This round
+This round: login screen on phones
+  web/src/pages/Login.jsx
+    Top padding was missing: the "pt-safe" helper overrode "pt-10", so the logo touched the top edge. The header now uses
+    calc(safe-area + 2rem), which adds the phone's notch/status-bar space to a 2rem gap.
+    Short screens (small phones, SE-size): headline gets smaller and the chips/intro text are hidden so Sign in stays in view.
+    Phones held sideways: two columns (welcome text left, form right), form scrolls inside its panel.
   web/src/components/Layout.jsx
-    Header is now two tiers: top bar (logo, bell, account menu) and a tab bar where every destination shows its name.
-    The active tab has an underline in the brand colour. The CareCompass logo is now a link to the user's home page.
-    The doctor's 7 tabs fit on screens from 1024 px up; below that the phone-style bottom tab bar is used.
-  web/src/pages/doctor/Studio.jsx
-    Save bar rebuilt for phones: status on top, "Restore starter rules" as a small link, big Discard and Save buttons.
-  web/tailwind.config.js, web/src/index.css
-    Root cause of the broken save bar: the page wrapper's entrance animation kept a transform after it finished, so
-    "fixed" elements inside it were placed at the bottom of the page instead of the bottom of the screen.
-    Entrance animations no longer keep their final state (fill-mode backwards instead of both).
-  web/src/components/studio/RulesTab.jsx
-    Palette stays below the taller header while scrolling.
+    Same override bug in the phone "More" sheet: bottom padding was 0, so Sign out touched the screen edge. Fixed.
+  web/tailwind.config.js
+    New "short-land" variant (landscape and under 520 px tall).
 
-Earlier rounds (still included in this folder): server CORS fix for the mobile app, launch animation, phone login,
-removal of "Install web app", Android manifest fix, Plan Studio layout fix.
-Remember to delete web/public/sw.js if it still exists.
+Checked on: 360x800, 390x844, 412x915, 430x932, 320x568, 375x667, 800x360 landscape, 768x1024 tablet.
+24 px left and right padding, 32 px above the logo, no sideways overflow.
+
+Earlier rounds are still included in this folder (header, Studio save bar, mobile app launch animation, CORS fix for the app,
+removal of "Install web app", Android manifest fix). Delete web/public/sw.js if it still exists.
