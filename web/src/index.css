@@ -68,3 +68,6 @@ html.booting .reveal { animation-delay: calc(var(--i, 0) * 80ms + 1.8s); }
 html.booting .sheet-in { animation-delay: 1.7s; }
 
 html.boot-dark, html.boot-dark body { background: #1d1330; }
+
+/* keep focused fields and anchors clear of the sticky header and the bottom bars */
+html { scroll-padding-top: 7.5rem; scroll-padding-bottom: 9rem; }

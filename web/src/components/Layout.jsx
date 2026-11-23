@@ -73,9 +73,9 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       {/* Top navigation */}
-      <header className="pt-safe sticky top-0 z-30">
+      <header className="pt-safe sticky top-0 z-30 bg-white">
         <div aria-hidden className="h-[3px] bg-gradient-to-r from-brand-400 via-brand-600 to-ink-800" />
-        <div className={cx('border-b bg-white/90 backdrop-blur-xl transition-shadow duration-300', scrolled ? 'border-ink-100 shadow-[0_12px_32px_-18px_rgba(43,29,66,.5)]' : 'border-ink-100/70')}>
+        <div className={cx('border-b bg-white transition-shadow duration-300', scrolled ? 'border-ink-100 shadow-[0_12px_32px_-18px_rgba(43,29,66,.5)]' : 'border-ink-100/70')}>
           {/* top bar: logo (goes home), notifications, account */}
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:h-14 md:px-8">
             <Link to={homeFor(user.role)} aria-label="CareCompass, go to home" className="-ml-1.5 rounded-2xl p-1.5 outline-none transition hover:bg-ink-50 focus-visible:ring-4 focus-visible:ring-brand-500/20 active:scale-[.98]">
@@ -110,7 +110,7 @@ export default function Layout() {
       <main className={cx('mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pt-10', crowded ? 'lg:pb-14' : 'md:pb-14')}><div className="animate-rise"><Outlet /></div></main>
 
       {/* Bottom tabs (phones) */}
-      <nav className={cx('pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white/95 backdrop-blur', crowded ? 'lg:hidden' : 'md:hidden')} aria-label="Main">
+      <nav className={cx('pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white', crowded ? 'lg:hidden' : 'md:hidden')} aria-label="Main">
         {tabs.map(([to, text, Icon, end]) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', isActive ? 'text-brand-700' : 'text-slate-500')}>
             {({ isActive }) => (<><span className={cx('rounded-full px-4 py-1 transition', isActive && 'bg-brand-50')}><Icon className="h-5 w-5" /></span><span className="max-w-full truncate px-0.5">{text}</span></>)}

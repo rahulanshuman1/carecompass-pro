@@ -1,16 +1,14 @@
-This round: login screen on phones
-  web/src/pages/Login.jsx
-    Top padding was missing: the "pt-safe" helper overrode "pt-10", so the logo touched the top edge. The header now uses
-    calc(safe-area + 2rem), which adds the phone's notch/status-bar space to a 2rem gap.
-    Short screens (small phones, SE-size): headline gets smaller and the chips/intro text are hidden so Sign in stays in view.
-    Phones held sideways: two columns (welcome text left, form right), form scrolls inside its panel.
+This round: text showing through the header on mobile
   web/src/components/Layout.jsx
-    Same override bug in the phone "More" sheet: bottom padding was 0, so Sign out touched the screen edge. Fixed.
-  web/tailwind.config.js
-    New "short-land" variant (landscape and under 520 px tall).
+    The header element had no background. On phones that reserve a few pixels at the top (browser or app safe area), the
+    padding strip above the pink line was see-through, so scrolled text showed there. The header, its inner bar and the
+    bottom tab bar are now solid white (no 90%/95% transparency or blur).
+  web/src/pages/doctor/Studio.jsx
+    The save bar is solid white too.
+  web/src/index.css
+    scroll-padding so a focused field or link scrolls into view clear of the header and the bottom bars.
 
-Checked on: 360x800, 390x844, 412x915, 430x932, 320x568, 375x667, 800x360 landscape, 768x1024 tablet.
-24 px left and right padding, 32 px above the logo, no sideways overflow.
+Checked with a simulated phone safe-area inset: stray pixels above the header line went from 37 to 0.
+Re-checked: header (4 roles x 6 widths), logo links, Studio save bar (5 sizes), login screen (8 sizes).
 
-Earlier rounds are still included in this folder (header, Studio save bar, mobile app launch animation, CORS fix for the app,
-removal of "Install web app", Android manifest fix). Delete web/public/sw.js if it still exists.
+Earlier rounds are still included in this folder. Delete web/public/sw.js if it still exists.

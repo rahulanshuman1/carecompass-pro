@@ -70,7 +70,7 @@ export default function Studio() {
         {tab === 'test' && <TestTab s={s} meta={meta} />}
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-ink-100 bg-white/95 shadow-[0_-12px_30px_-20px_rgba(43,29,66,.45)] backdrop-blur lg:bottom-0">
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-ink-100 bg-white shadow-[0_-12px_30px_-20px_rgba(43,29,66,.45)] lg:bottom-0">
         <div className="mx-auto max-w-6xl space-y-2.5 px-4 py-3 md:flex md:items-center md:justify-between md:space-y-0 md:px-8">
           <div className="flex items-center justify-between gap-3">
             <p className={cx('flex items-center gap-2 text-sm font-bold', dirty ? 'text-amber-700' : 'text-slate-500')}>
