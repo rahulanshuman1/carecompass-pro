@@ -138,7 +138,7 @@ export default function RulesTab({ s, setS, meta }) {
         )} />
         <Button variant="secondary" onClick={addRule}><Plus className="h-4 w-4" />Add rule</Button>
       </div>
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside className="lg:sticky lg:top-36 lg:self-start">
         <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div>
             <h3 className="mb-2 text-sm">Conditions <span className="font-normal text-slate-400">(IF)</span></h3>

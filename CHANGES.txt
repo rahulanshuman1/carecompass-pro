@@ -1,18 +1,17 @@
-Mobile app login ("Cannot reach the server")
-  server/src/utils/cors.js (new), server/src/app.js, server/tests/cors.test.js (new)
-  The API rejected the Android app's origin (https://localhost). It now accepts the app origins by itself, without credentials.
-  Only the server needs redeploying for this fix (push, wait for Render).
+This round
+  web/src/components/Layout.jsx
+    Header is now two tiers: top bar (logo, bell, account menu) and a tab bar where every destination shows its name.
+    The active tab has an underline in the brand colour. The CareCompass logo is now a link to the user's home page.
+    The doctor's 7 tabs fit on screens from 1024 px up; below that the phone-style bottom tab bar is used.
+  web/src/pages/doctor/Studio.jsx
+    Save bar rebuilt for phones: status on top, "Restore starter rules" as a small link, big Discard and Save buttons.
+  web/tailwind.config.js, web/src/index.css
+    Root cause of the broken save bar: the page wrapper's entrance animation kept a transform after it finished, so
+    "fixed" elements inside it were placed at the bottom of the page instead of the bottom of the screen.
+    Entrance animations no longer keep their final state (fill-mode backwards instead of both).
+  web/src/components/studio/RulesTab.jsx
+    Palette stays below the taller header while scrolling.
 
-Header
-  web/src/components/Layout.jsx: new header (gradient accent line, pill menu bar, bell, account menu with My profile and Sign out).
-  Nothing can be cut off any more: checked for 4 roles x 6 screen widths.
-
-Remove "Install web app"
-  web/src/components/AppDownload.jsx, web/src/main.jsx, web/index.html (manifest link removed), web/public/sw.js (deleted).
-
-Mobile app look and launch animation
-  web/src/components/NativeSplash.jsx (new), web/public/boot.js (new), web/src/index.css, web/src/main.jsx,
-  web/src/pages/Login.jsx (phone layout), web/capacitor.config.json (dark start colour).
-  Push to GitHub: the Android workflow rebuilds the APK because files under web/ changed.
-
-Earlier fixes (still included): Android manifest step in .github/workflows/android.yml, Plan Studio layout.
+Earlier rounds (still included in this folder): server CORS fix for the mobile app, launch animation, phone login,
+removal of "Install web app", Android manifest fix, Plan Studio layout fix.
+Remember to delete web/public/sw.js if it still exists.

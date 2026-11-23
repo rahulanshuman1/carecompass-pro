@@ -15,7 +15,7 @@
 
 @layer utilities {
   /* staggered entrance: <div className="reveal" style={{ '--i': 3 }}> */
-  .reveal { animation: reveal .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+  .reveal { animation: reveal .55s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
   .tap { transition: transform .15s ease, box-shadow .2s ease; }
   .tap:hover { transform: translateY(-2px); }
   .tap:active { transform: scale(.98); }
@@ -56,13 +56,13 @@
 /* ---- Mobile app launch screen and first-open entrance ---- */
 .splash { transition: opacity .6s ease, transform .8s cubic-bezier(.7, 0, .2, 1); }
 .splash.out { opacity: 0; transform: translateY(-6%) scale(1.06); pointer-events: none; }
-.splash-word { animation: splash-rise .8s .45s cubic-bezier(.2, .8, .2, 1) both; }
-.splash-tag { animation: splash-rise .8s .85s cubic-bezier(.2, .8, .2, 1) both; }
-.splash-bar { animation: splash-fill 2.1s .15s cubic-bezier(.4, 0, .2, 1) both; }
+.splash-word { animation: splash-rise .8s .45s cubic-bezier(.2, .8, .2, 1) backwards; }
+.splash-tag { animation: splash-rise .8s .85s cubic-bezier(.2, .8, .2, 1) backwards; }
+.splash-bar { animation: splash-fill 2.1s .15s cubic-bezier(.4, 0, .2, 1) backwards; }
 @keyframes splash-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes splash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 /* the login sheet slides up from the bottom */
-.sheet-in { animation: slideUp .7s cubic-bezier(.2, .8, .2, 1) both; }
+.sheet-in { animation: slideUp .7s cubic-bezier(.2, .8, .2, 1) backwards; }
 /* while the launch screen is up, hold back the entrance animations so they play as it lifts away */
 html.booting .reveal { animation-delay: calc(var(--i, 0) * 80ms + 1.8s); }
 html.booting .sheet-in { animation-delay: 1.7s; }

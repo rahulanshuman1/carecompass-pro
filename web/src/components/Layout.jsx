@@ -3,7 +3,7 @@ import Logo from './Logo';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, CreditCard, Salad, Users, ShieldCheck, FileCheck2, LogOut, Home, UserCog, Inbox, Tags, CalendarDays, CalendarClock, Menu, X, Wand2, ChevronDown, UserRound } from 'lucide-react';
 import { useAuth } from '../lib/auth';
-import { ROLE_LABEL } from '../lib/format';
+import { ROLE_LABEL, homeFor } from '../lib/format';
 import { Avatar, cx } from './ui';
 import NotificationBell from './NotificationBell';
 import AppDownload from './AppDownload';
@@ -29,7 +29,7 @@ function UserMenu({ user, logout }) {
     <div className="relative" ref={box}>
       <button onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} aria-label="Account menu" className={cx('flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-1 transition hover:bg-ink-50 sm:pr-2.5', open ? 'border-ink-200 bg-ink-50' : 'border-transparent')}>
         <Avatar name={user.name} photo={user.photo} />
-        <span className="hidden min-w-0 text-left leading-tight xl:block"><span className="block max-w-[130px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-[11px] font-semibold text-slate-500">{ROLE_LABEL[user.role]}</span></span>
+        <span className="hidden min-w-0 text-left leading-tight md:block"><span className="block max-w-[130px] truncate text-sm font-bold text-ink-900">{user.name}</span><span className="block text-[11px] font-semibold text-slate-500">{ROLE_LABEL[user.role]}</span></span>
         <ChevronDown className={cx('hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block', open && 'rotate-180')} />
       </button>
       {open && (
@@ -55,7 +55,7 @@ function UserMenu({ user, logout }) {
 export default function Layout() {
   const { user, logout } = useAuth();
   const nav = NAV[user.role];
-  const crowded = nav.length > 5; // lead doctor: seven destinations need the room
+  const crowded = nav.length > 5; // lead doctor: seven destinations, so the phone layout lasts until lg
   const loc = useLocation();
   const [more, setMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -75,29 +75,42 @@ export default function Layout() {
       {/* Top navigation */}
       <header className="pt-safe sticky top-0 z-30">
         <div aria-hidden className="h-[3px] bg-gradient-to-r from-brand-400 via-brand-600 to-ink-800" />
-        <div className={cx('border-b bg-white/85 backdrop-blur-xl transition-shadow duration-300', scrolled ? 'border-ink-100 shadow-[0_10px_30px_-18px_rgba(43,29,66,.45)]' : 'border-transparent')}>
-          <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
-            <Brand compact />
-            {/* destinations: the active one shows its name; others show their name from lg (icons only when there are many) */}
-            <nav className={cx('mx-auto hidden items-center gap-0.5 rounded-full bg-ink-50/80 p-1 ring-1 ring-ink-100', crowded ? 'xl:flex' : 'md:flex')} aria-label="Main">
-              {nav.map(([to, text, Icon, end]) => (
-                <NavLink key={to} to={to} end={end} title={text} aria-label={text} className={({ isActive }) => cx('inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold transition-all duration-200', isActive ? 'bg-white text-brand-700 shadow-sm ring-1 ring-ink-100' : 'text-ink-700 hover:bg-white/70')}>
-                  {({ isActive }) => (<><Icon className="h-[17px] w-[17px] shrink-0" /><span className={cx(!isActive && (crowded ? 'hidden' : 'hidden xl:inline'))}>{text}</span></>)}
-                </NavLink>
-              ))}
-            </nav>
-            <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <div className={cx('border-b bg-white/90 backdrop-blur-xl transition-shadow duration-300', scrolled ? 'border-ink-100 shadow-[0_12px_32px_-18px_rgba(43,29,66,.5)]' : 'border-ink-100/70')}>
+          {/* top bar: logo (goes home), notifications, account */}
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:h-14 md:px-8">
+            <Link to={homeFor(user.role)} aria-label="CareCompass, go to home" className="-ml-1.5 rounded-2xl p-1.5 outline-none transition hover:bg-ink-50 focus-visible:ring-4 focus-visible:ring-brand-500/20 active:scale-[.98]">
+              <Brand compact />
+            </Link>
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <NotificationBell />
               <UserMenu user={user} logout={logout} />
             </div>
           </div>
+          {/* tab bar: every destination shows its name; the active one gets an underline that slides in */}
+          <nav className={cx('mx-auto hidden max-w-6xl px-4 md:px-8', crowded ? 'lg:block' : 'md:block')} aria-label="Main">
+            <ul className="no-scrollbar -mb-px flex gap-1 overflow-x-auto">
+              {nav.map(([to, text, Icon, end]) => (
+                <li key={to} className="shrink-0">
+                  <NavLink to={to} end={end} className={({ isActive }) => cx('group relative inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-3 text-sm font-bold outline-none transition-colors focus-visible:text-brand-700', isActive ? 'text-brand-700' : 'text-slate-600 hover:text-ink-900')}>
+                    {({ isActive }) => (
+                      <>
+                        <Icon className={cx('h-[17px] w-[17px] shrink-0 transition duration-200 group-hover:scale-110', isActive ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-500')} />
+                        {text}
+                        <span aria-hidden className={cx('absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition duration-300', isActive ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0 group-hover:scale-x-75 group-hover:opacity-40')} />
+                      </>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </header>
 
-      <main className={cx('mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pt-10', crowded ? 'xl:pb-14' : 'md:pb-14')}><div className="animate-rise"><Outlet /></div></main>
+      <main className={cx('mx-auto w-full max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pt-10', crowded ? 'lg:pb-14' : 'md:pb-14')}><div className="animate-rise"><Outlet /></div></main>
 
       {/* Bottom tabs (phones) */}
-      <nav className={cx('pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white/95 backdrop-blur', crowded ? 'xl:hidden' : 'md:hidden')} aria-label="Main">
+      <nav className={cx('pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-100 bg-white/95 backdrop-blur', crowded ? 'lg:hidden' : 'md:hidden')} aria-label="Main">
         {tabs.map(([to, text, Icon, end]) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => cx('flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', isActive ? 'text-brand-700' : 'text-slate-500')}>
             {({ isActive }) => (<><span className={cx('rounded-full px-4 py-1 transition', isActive && 'bg-brand-50')}><Icon className="h-5 w-5" /></span><span className="max-w-full truncate px-0.5">{text}</span></>)}
@@ -112,7 +125,7 @@ export default function Layout() {
 
       {/* "More" sheet (phones) */}
       {more && (
-        <div className={cx('fixed inset-0 z-40', crowded ? 'xl:hidden' : 'md:hidden')} role="dialog" aria-modal="true" aria-label="More">
+        <div className={cx('fixed inset-0 z-40', crowded ? 'lg:hidden' : 'md:hidden')} role="dialog" aria-modal="true" aria-label="More">
           <button className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" onClick={() => setMore(false)} aria-label="Close menu" />
           <div className="pb-safe absolute inset-x-0 bottom-0 max-h-[85vh] animate-slideUp overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl">
             <div className="mb-3 flex items-center justify-between"><h2>More</h2><button onClick={() => setMore(false)} className="rounded-full p-2 text-slate-400 hover:bg-ink-50" aria-label="Close"><X className="h-5 w-5" /></button></div>

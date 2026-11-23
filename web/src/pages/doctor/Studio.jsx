@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ListChecks, Play, Rows3, Save, ShieldAlert, SlidersHorizontal, Undo2, Wand2 } from 'lucide-react';
+import { ListChecks, Play, RotateCcw, Rows3, Save, ShieldAlert, SlidersHorizontal, Undo2, Wand2 } from 'lucide-react';
 import { api, post, put } from '../../lib/api';
 import { useToast } from '../../lib/toast';
 import { Alert, Button, PageHeader, PageLoader, cx } from '../../components/ui';
@@ -32,6 +32,7 @@ export default function Studio() {
     onSuccess: (r) => { qc.setQueryData(['studio'], (d) => ({ ...d, studio: r.studio, version: r.version })); setS(r.studio); saved.current = JSON.stringify(r.studio); toast.success(`Saved as version ${r.version}. New plans use it from now on.`); },
     onError: toast.error,
   });
+  const restore = () => { if (window.confirm('Replace everything with the starter rules? Your own rules will be lost.')) reset.mutate(); };
   const reset = useMutation({
     mutationFn: () => post('/studio/reset'),
     onSuccess: (r) => { qc.setQueryData(['studio'], (d) => ({ ...d, studio: r.studio, version: r.version })); setS(r.studio); saved.current = JSON.stringify(r.studio); toast.success('Starter rules restored'); },
@@ -61,7 +62,7 @@ export default function Studio() {
         ))}
       </div>
 
-      <div className="pb-28">
+      <div className="pb-52 lg:pb-28">
         {tab === 'rules' && <RulesTab s={s} setS={setS} meta={meta} />}
         {tab === 'meals' && <SlotsTab s={s} setS={setS} />}
         {tab === 'formulas' && <FormulasTab s={s} setS={setS} />}
@@ -69,13 +70,19 @@ export default function Studio() {
         {tab === 'test' && <TestTab s={s} meta={meta} />}
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-slate-200 bg-white/95 backdrop-blur xl:bottom-0">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-8">
-          <p className={cx('text-sm font-semibold', dirty ? 'text-amber-700' : 'text-slate-500')}>{dirty ? 'You have unsaved changes' : 'All changes saved'}</p>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" loading={reset.isPending} onClick={() => { if (window.confirm('Replace everything with the starter rules? Your own rules will be lost.')) reset.mutate(); }}>Restore starter rules</Button>
-            <Button variant="secondary" size="sm" disabled={!dirty} onClick={() => setS(JSON.parse(saved.current))}><Undo2 className="h-4 w-4" />Discard</Button>
-            <Button size="sm" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}><Save className="h-4 w-4" />Save changes</Button>
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-ink-100 bg-white/95 shadow-[0_-12px_30px_-20px_rgba(43,29,66,.45)] backdrop-blur lg:bottom-0">
+        <div className="mx-auto max-w-6xl space-y-2.5 px-4 py-3 md:flex md:items-center md:justify-between md:space-y-0 md:px-8">
+          <div className="flex items-center justify-between gap-3">
+            <p className={cx('flex items-center gap-2 text-sm font-bold', dirty ? 'text-amber-700' : 'text-slate-500')}>
+              <span aria-hidden className={cx('h-2 w-2 rounded-full', dirty ? 'animate-pulse bg-amber-500' : 'bg-emerald-500')} />
+              {dirty ? 'Unsaved changes' : 'All changes saved'}
+            </p>
+            <button type="button" onClick={restore} disabled={reset.isPending} className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold text-slate-500 hover:text-rose-600 disabled:opacity-50 md:hidden"><RotateCcw className="h-3.5 w-3.5" />Restore starter rules</button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="hidden whitespace-nowrap md:inline-flex" loading={reset.isPending} onClick={restore}><RotateCcw className="h-4 w-4" />Restore starter rules</Button>
+            <Button variant="secondary" className="flex-1 whitespace-nowrap md:flex-none" disabled={!dirty} onClick={() => setS(JSON.parse(saved.current))}><Undo2 className="h-4 w-4" />Discard</Button>
+            <Button className="flex-[2] whitespace-nowrap md:flex-none" disabled={!dirty} loading={save.isPending} onClick={() => save.mutate()}><Save className="h-4 w-4" />Save changes</Button>
           </div>
         </div>
       </div>
